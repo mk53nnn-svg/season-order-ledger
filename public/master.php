@@ -13,11 +13,9 @@
   .tab.active { color: #222; font-weight: 600; border-bottom-color: #222; }
   .panel { display: none; }
   .panel.active { display: block; }
-
   .add-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
   .add-row input, .add-row select { height: 38px; border-radius: 8px; border: 1px solid #ccc; padding: 0 10px; font-size: 14px; flex: 1; min-width: 120px; }
   .add-row button { height: 38px; padding: 0 16px; border-radius: 8px; border: none; background: #222; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
-
   table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 13px; }
   th { text-align: left; font-size: 11px; color: #888; padding: 8px 12px; border-bottom: 1px solid #eee; }
   td { padding: 9px 12px; border-bottom: 1px solid #eee; }
@@ -25,6 +23,7 @@
   .btn-mini { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: none; cursor: pointer; }
   .btn-edit { background: #eef5fc; color: #2b6cb0; border: 1px solid #2b6cb0; }
   .btn-delete { background: #fdecea; color: #c0392b; border: 1px solid #c0392b; }
+  .btn-view { background: #f0f0f0; color: #555; border: 1px solid #ccc; }
   .btn-confirm { background: #222; color: #fff; }
   .btn-cancel { background: #fff; border: 1px solid #ccc; color: #888; }
   input.inline-edit { height: 30px; border-radius: 6px; border: 1px solid #ccc; padding: 0 8px; font-size: 13px; width: 100%; }
@@ -33,12 +32,19 @@
   .msg { margin-top: 12px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
   .msg.success { background: #e6f4ea; color: #1e7e34; display: block; }
   .msg.error { background: #fdecea; color: #c0392b; display: block; }
+  .client-name-link { color: #2b6cb0; cursor: pointer; text-decoration: underline; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; }
+  .modal-overlay.show { display: flex; align-items: center; justify-content: center; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
+  .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .modal table { font-size: 13px; }
+  .modal-close { margin-top: 16px; height: 36px; padding: 0 20px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 13px; }
 </style>
 </head>
 <body>
+<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #eee;"><a href="index.php" style="font-size:12px;color:#888;text-decoration:none;">&laquo; ホーム</a></div>
 <div class="page">
   <h1>マスタ管理</h1>
-
   <div class="tabs">
     <div class="tab active" data-tab="genre">ジャンル</div>
     <div class="tab" data-tab="product">商品</div>
@@ -71,7 +77,17 @@
       <tbody id="product-tbody"></tbody>
     </table>
   </div>
-<!-- シーズン管理 -->
+
+  <!-- 取引先 -->
+  <div class="panel" id="panel-client">
+    <p class="note">取引先名をクリックすると今シーズンの受注一覧を表示します。</p>
+    <table>
+      <thead><tr><th>取引先名</th><th style="width:160px;"></th></tr></thead>
+      <tbody id="client-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- シーズン管理 -->
   <div class="panel" id="panel-season">
     <div class="add-row">
       <input type="text" id="new-season-name" placeholder="例：2026-2027シーズン">
@@ -79,22 +95,26 @@
       <input type="date" id="new-season-end">
       <button onclick="addSeason()">追加する</button>
     </div>
-    <p class="note">開始日例：2026-11-01　終了日例：2027-03-31</p>
+    <p class="note" style="margin-bottom:12px;">開始日例：2026-11-01　終了日例：2027-03-31</p>
     <table>
-      <thead><tr><th>シーズン名</th><th>開始日</th><th>終了日</th><th>状態</th><th></th></tr></thead>
+      <thead><tr><th>シーズン名</th><th>開始日</th><th>終了日</th><th>状態</th><th style="width:160px;"></th></tr></thead>
       <tbody id="season-tbody"></tbody>
-    </table>
-  </div>
-  <!-- 取引先 -->
-  <div class="panel" id="panel-client">
-    <p class="note">取引先は受注入力時に自由入力されますが、これまで入力された名称の一覧をここで確認できます（手動追加はできません）。</p>
-    <table>
-      <thead><tr><th>取引先名</th></tr></thead>
-      <tbody id="client-tbody"></tbody>
     </table>
   </div>
 
   <div class="msg" id="msg"></div>
+</div>
+
+<!-- 受注一覧モーダル -->
+<div class="modal-overlay" id="client-modal">
+  <div class="modal">
+    <h2 id="modal-title"></h2>
+    <table>
+      <thead><tr><th>受注日</th><th>商品名</th><th>受注数</th><th>納期</th></tr></thead>
+      <tbody id="modal-tbody"></tbody>
+    </table>
+    <button class="modal-close" onclick="closeModal()">閉じる</button>
+  </div>
 </div>
 
 <script>
@@ -107,7 +127,6 @@ function showMsg(text, isError = false) {
   setTimeout(() => { msg.className = 'msg'; }, 2000);
 }
 
-// タブ切り替え
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -134,14 +153,11 @@ function renderGenres() {
     <tr data-id="${g.id}">
       <td>${g.display_order}</td>
       <td class="td-name">${escapeHtml(g.name)}</td>
-      <td>
-        <div class="row-actions">
-          <button class="btn-mini btn-edit" onclick="editGenre(this)">編集</button>
-          <button class="btn-mini btn-delete" onclick="deleteGenre(${g.id})">削除</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
+      <td><div class="row-actions">
+        <button class="btn-mini btn-edit" onclick="editGenre(this)">編集</button>
+        <button class="btn-mini btn-delete" onclick="deleteGenre(${g.id})">削除</button>
+      </div></td>
+    </tr>`).join('');
 }
 
 function renderProducts() {
@@ -152,14 +168,11 @@ function renderProducts() {
       <td class="td-genre">${escapeHtml(p.genre_name)}</td>
       <td class="td-name">${escapeHtml(p.product_name)}</td>
       <td class="td-code">${escapeHtml(p.product_code)}</td>
-      <td>
-        <div class="row-actions">
-          <button class="btn-mini btn-edit" onclick="editProduct(this)">編集</button>
-          <button class="btn-mini btn-delete" onclick="deleteProduct(${p.id})">削除</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
+      <td><div class="row-actions">
+        <button class="btn-mini btn-edit" onclick="editProduct(this)">編集</button>
+        <button class="btn-mini btn-delete" onclick="deleteProduct(${p.id})">削除</button>
+      </div></td>
+    </tr>`).join('');
 }
 
 function renderProductGenreSelect() {
@@ -173,39 +186,107 @@ async function loadClients() {
   const result = await res.json();
   const tbody = document.getElementById('client-tbody');
   if (!result.ok || result.clients.length === 0) {
-    tbody.innerHTML = '<tr><td style="color:#999;">まだ取引先データがありません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="2" style="color:#999;">まだ取引先データがありません</td></tr>';
     return;
   }
-  tbody.innerHTML = result.clients.map(c => `<tr><td>${escapeHtml(c.name)}</td></tr>`).join('');
+  tbody.innerHTML = result.clients.map(c => `
+    <tr data-id="${c.id}" data-name="${escapeHtml(c.name)}">
+      <td><span class="client-name-link" onclick="showClientOrders('${escapeHtml(c.name)}')">${escapeHtml(c.name)}</span></td>
+      <td><div class="row-actions">
+        <button class="btn-mini btn-edit" onclick="editClient(this)">編集</button>
+        <button class="btn-mini btn-delete" onclick="deleteClient(${c.id}, '${escapeHtml(c.name)}')">削除</button>
+      </div></td>
+    </tr>`).join('');
 }
 
-// ジャンル操作
+async function showClientOrders(clientName) {
+  const seasonRes = await fetch('../api/get_season.php');
+  const seasonData = await seasonRes.json();
+  if (!seasonData.ok) return;
+  const seasonId = seasonData.season.id;
+  const res = await fetch(`../api/get_client_orders.php?client_name=${encodeURIComponent(clientName)}&season_id=${seasonId}`);
+  const result = await res.json();
+  if (!result.ok) return;
+  document.getElementById('modal-title').textContent = clientName + ' の受注一覧（今シーズン）';
+  const tbody = document.getElementById('modal-tbody');
+  if (result.orders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:#999;">受注データがありません</td></tr>';
+  } else {
+    tbody.innerHTML = result.orders.map(o => `
+      <tr>
+        <td>${o.order_date}</td>
+        <td>${escapeHtml(o.product_name)}</td>
+        <td style="text-align:right;">${o.quantity}</td>
+        <td>${o.delivery_type ? escapeHtml(o.delivery_type) : '−'}</td>
+      </tr>`).join('') +
+      `<tr style="font-weight:600;background:#fafafa;">
+        <td colspan="2" style="text-align:right;color:#888;font-size:12px;">合計</td>
+        <td style="text-align:right;">${result.total}</td>
+        <td></td>
+      </tr>`;
+  }
+  document.getElementById('client-modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('client-modal').classList.remove('show');
+}
+
+function editClient(btn) {
+  const row = btn.closest('tr');
+  const name = row.dataset.name;
+  const id = row.dataset.id;
+  row.querySelector('.client-name-link').outerHTML = `<input type="text" class="inline-edit e-client-name" value="${escapeHtml(name)}">`;
+  row.cells[1].innerHTML = `<div class="row-actions">
+    <button class="btn-mini btn-confirm" onclick="confirmEditClient(this, ${id}, '${escapeHtml(name)}')">保存</button>
+    <button class="btn-mini btn-cancel" onclick="loadClients()">取消</button>
+  </div>`;
+}
+
+async function confirmEditClient(btn, id, oldName) {
+  const row = btn.closest('tr');
+  const newName = row.querySelector('.e-client-name').value.trim();
+  if (!newName) return;
+  const res = await fetch('../api/update_client.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'update_client', id, name: newName, old_name: oldName}),
+  });
+  const result = await res.json();
+  if (result.ok) { showMsg('更新しました'); await loadClients(); }
+  else { showMsg(result.error || '更新に失敗しました', true); }
+}
+
+async function deleteClient(id, name) {
+  if (!confirm(`「${name}」を削除しますか？\n※受注データは残ります`)) return;
+  const res = await fetch('../api/update_client.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'delete_client', id}),
+  });
+  const result = await res.json();
+  if (result.ok) { showMsg('削除しました'); await loadClients(); }
+  else { showMsg(result.error || '削除に失敗しました', true); }
+}
+
 async function addGenre() {
   const name = document.getElementById('new-genre-name').value.trim();
   if (!name) return;
   const res = await fetch('../api/master_genre_product.php', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'add_genre', name }),
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'add_genre', name}),
   });
   const result = await res.json();
-  if (result.ok) {
-    document.getElementById('new-genre-name').value = '';
-    showMsg('ジャンルを追加しました');
-    await loadMaster();
-  } else {
-    showMsg(result.error || '追加に失敗しました', true);
-  }
+  if (result.ok) { document.getElementById('new-genre-name').value = ''; showMsg('ジャンルを追加しました'); await loadMaster(); }
+  else { showMsg(result.error || '追加に失敗しました', true); }
 }
 
 function editGenre(btn) {
   const row = btn.closest('tr');
   const name = row.querySelector('.td-name').textContent;
   row.querySelector('.td-name').innerHTML = `<input type="text" class="inline-edit e-name" value="${escapeHtml(name)}">`;
-  row.cells[2].innerHTML = `
-    <div class="row-actions">
-      <button class="btn-mini btn-confirm" onclick="confirmEditGenre(this)">保存</button>
-      <button class="btn-mini btn-cancel" onclick="loadMaster()">取消</button>
-    </div>`;
+  row.cells[2].innerHTML = `<div class="row-actions">
+    <button class="btn-mini btn-confirm" onclick="confirmEditGenre(this)">保存</button>
+    <button class="btn-mini btn-cancel" onclick="loadMaster()">取消</button>
+  </div>`;
 }
 
 async function confirmEditGenre(btn) {
@@ -214,33 +295,31 @@ async function confirmEditGenre(btn) {
   const name = row.querySelector('.e-name').value.trim();
   if (!name) return;
   await fetch('../api/master_genre_product.php', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'update_genre', id, name }),
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'update_genre', id, name}),
   });
   showMsg('更新しました');
   await loadMaster();
 }
 
 async function deleteGenre(id) {
-  if (!confirm('このジャンルを削除しますか？（紐づく商品は商品一覧に残ります）')) return;
+  if (!confirm('このジャンルを削除しますか？')) return;
   await fetch('../api/master_genre_product.php', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'delete_genre', id }),
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'delete_genre', id}),
   });
   showMsg('削除しました');
   await loadMaster();
 }
 
-// 商品操作
 async function addProduct() {
   const genreId = parseInt(document.getElementById('new-product-genre').value);
   const code = document.getElementById('new-product-code').value.trim();
   const name = document.getElementById('new-product-name').value.trim();
   if (!genreId || !code || !name) { showMsg('すべての項目を入力してください', true); return; }
-
   const res = await fetch('../api/master_genre_product.php', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'add_product', genre_id: genreId, product_code: code, product_name: name }),
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'add_product', genre_id: genreId, product_code: code, product_name: name}),
   });
   const result = await res.json();
   if (result.ok) {
@@ -248,9 +327,7 @@ async function addProduct() {
     document.getElementById('new-product-name').value = '';
     showMsg('商品を追加しました');
     await loadMaster();
-  } else {
-    showMsg(result.error || '追加に失敗しました', true);
-  }
+  } else { showMsg(result.error || '追加に失敗しました', true); }
 }
 
 function editProduct(btn) {
@@ -260,15 +337,13 @@ function editProduct(btn) {
   const code = row.querySelector('.td-code').textContent;
   const genreOptions = masterData.genres.filter(g => g.is_active == 1)
     .map(g => `<option value="${g.id}" ${g.id == genreId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`).join('');
-
   row.querySelector('.td-genre').innerHTML = `<select class="inline-edit e-genre">${genreOptions}</select>`;
   row.querySelector('.td-name').innerHTML = `<input type="text" class="inline-edit e-name" value="${escapeHtml(name)}">`;
   row.querySelector('.td-code').innerHTML = `<input type="text" class="inline-edit e-code" value="${escapeHtml(code)}">`;
-  row.cells[3].innerHTML = `
-    <div class="row-actions">
-      <button class="btn-mini btn-confirm" onclick="confirmEditProduct(this)">保存</button>
-      <button class="btn-mini btn-cancel" onclick="loadMaster()">取消</button>
-    </div>`;
+  row.cells[3].innerHTML = `<div class="row-actions">
+    <button class="btn-mini btn-confirm" onclick="confirmEditProduct(this)">保存</button>
+    <button class="btn-mini btn-cancel" onclick="loadMaster()">取消</button>
+  </div>`;
 }
 
 async function confirmEditProduct(btn) {
@@ -278,10 +353,9 @@ async function confirmEditProduct(btn) {
   const name = row.querySelector('.e-name').value.trim();
   const code = row.querySelector('.e-code').value.trim();
   if (!name || !code) return;
-
   await fetch('../api/master_genre_product.php', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'update_product', id, genre_id: genreId, product_code: code, product_name: name }),
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'update_product', id, genre_id: genreId, product_code: code, product_name: name}),
   });
   showMsg('更新しました');
   await loadMaster();
@@ -290,22 +364,12 @@ async function confirmEditProduct(btn) {
 async function deleteProduct(id) {
   if (!confirm('この商品を削除しますか？（過去の受注データは残ります）')) return;
   await fetch('../api/master_genre_product.php', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'delete_product', id }),
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'delete_product', id}),
   });
   showMsg('削除しました');
   await loadMaster();
 }
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-loadMaster();
-loadClients();
-loadSeasons();
 
 async function loadSeasons() {
   const res = await fetch('../api/master_season.php');
@@ -318,9 +382,11 @@ async function loadSeasons() {
       <td>${s.start_date}</td>
       <td>${s.end_date}</td>
       <td>${s.is_active == 1 ? '<span style="color:#1e7e34;font-weight:600;">使用中</span>' : ''}</td>
-      <td>${s.is_active != 1 ? `<button class="btn-mini btn-edit" onclick="activateSeason(${s.id})">切り替える</button>` : ''}</td>
-    </tr>
-  `).join('');
+      <td><div class="row-actions">
+        ${s.is_active != 1 ? `<button class="btn-mini btn-edit" onclick="activateSeason(${s.id})">切り替える</button>` : ''}
+        ${s.is_active != 1 ? `<button class="btn-mini btn-delete" onclick="deleteSeason(${s.id}, '${escapeHtml(s.name)}')">削除</button>` : ''}
+      </div></td>
+    </tr>`).join('');
 }
 
 async function addSeason() {
@@ -339,9 +405,7 @@ async function addSeason() {
     document.getElementById('new-season-end').value = '';
     showMsg('シーズンを追加しました');
     await loadSeasons();
-  } else {
-    showMsg(result.error || '追加に失敗しました', true);
-  }
+  } else { showMsg(result.error || '追加に失敗しました', true); }
 }
 
 async function activateSeason(id) {
@@ -351,13 +415,31 @@ async function activateSeason(id) {
     body: JSON.stringify({action: 'activate_season', id}),
   });
   const result = await res.json();
-  if (result.ok) {
-    showMsg('シーズンを切り替えました');
-    await loadSeasons();
-  } else {
-    showMsg(result.error || '切り替えに失敗しました', true);
-  }
+  if (result.ok) { showMsg('シーズンを切り替えました'); await loadSeasons(); }
+  else { showMsg(result.error || '切り替えに失敗しました', true); }
 }
+
+async function deleteSeason(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  if (!confirm('本当に削除しますか？この操作は取り消せません。')) return;
+  const res = await fetch('../api/master_season.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'delete_season', id}),
+  });
+  const result = await res.json();
+  if (result.ok) { showMsg('削除しました'); await loadSeasons(); }
+  else { showMsg(result.error || '削除に失敗しました', true); }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+loadMaster();
+loadClients();
+loadSeasons();
 </script>
 </body>
 </html>
