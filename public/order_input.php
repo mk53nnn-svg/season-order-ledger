@@ -6,9 +6,13 @@ $season = get_active_season();
 $genres = get_genres();
 
 if (!$season) {
-    echo '現在アクティブなシーズンが設定されていません。先にシーズンを作成してください。';
+    echo '現在アクティブなシーズンが設定されていません。';
     exit;
 }
+
+$pdo = get_pdo();
+$clientsStmt = $pdo->query("SELECT id, name FROM clients ORDER BY name ASC");
+$clients = $clientsStmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -29,9 +33,11 @@ if (!$season) {
   .field label { font-size: 13px; color: #555; }
   .field input, .field select { height: 38px; border-radius: 8px; border: 1px solid #ccc; padding: 0 10px; font-size: 14px; background: #fafafa; }
   .field input:focus, .field select:focus { outline: none; border-color: #4a90d9; background: #fff; }
-  .delivery-options { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-  .delivery-btn { flex: 1; min-width: 70px; height: 38px; border-radius: 8px; border: 1px solid #ccc; background: #fafafa; font-size: 13px; cursor: pointer; }
-  .delivery-btn.active { background: #2b6cb0; color: #fff; border-color: #2b6cb0; }
+  .client-section { display: flex; flex-direction: column; gap: 8px; }
+  .client-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .client-note { font-size: 11px; color: #999; }
+  .delivery-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .delivery-row select { height: 38px; border-radius: 8px; border: 1px solid #ccc; padding: 0 8px; font-size: 14px; background: #fafafa; }
   .item-row { display: grid; grid-template-columns: 1fr 1fr 90px 32px; gap: 8px; align-items: center; margin-bottom: 10px; }
   .item-row select, .item-row input { height: 36px; border-radius: 8px; border: 1px solid #ccc; padding: 0 8px; font-size: 13px; background: #fafafa; }
   .del-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #999; cursor: pointer; font-size: 16px; }
@@ -47,6 +53,7 @@ if (!$season) {
 </style>
 </head>
 <body>
+<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #eee;"><a href="index.php" style="font-size:12px;color:#888;text-decoration:none;">&laquo; ホーム</a></div>
 <div class="page">
   <div class="header">
     <h1>受注入力</h1>
@@ -56,26 +63,47 @@ if (!$season) {
   <form id="order-form">
     <div class="card">
       <div class="section-label">基本情報</div>
-      <div class="row2">
-        <div class="field">
-          <label>取引先</label>
-          <input type="text" id="client_name" placeholder="例：さくら保育園" required>
+
+      <div class="field">
+        <label>取引先</label>
+        <div class="client-section">
+          <div class="client-row">
+            <select id="client_select">
+              <option value="">-- プルダウンから選択 --</option>
+              <?php foreach ($clients as $c): ?>
+              <option value="<?= htmlspecialchars($c['name']) ?>"><?= htmlspecialchars($c['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+            <input type="text" id="client_name" placeholder="または自由入力">
+          </div>
+          <span class="client-note">※プルダウンで選択した場合は自由入力欄より優先されます</span>
         </div>
+      </div>
+
+      <div class="row2">
         <div class="field">
           <label>受注日</label>
           <input type="date" id="order_date" required>
         </div>
-      </div>
-
-      <div class="field">
-        <label>納期</label>
-        <div class="row2">
-          <input type="date" id="delivery_date">
-          <div class="delivery-options" id="delivery-options">
-            <button type="button" class="delivery-btn" data-value="即納">即納</button>
-            <button type="button" class="delivery-btn" data-value="初旬">初旬</button>
-            <button type="button" class="delivery-btn" data-value="中旬">中旬</button>
-            <button type="button" class="delivery-btn" data-value="下旬">下旬</button>
+        <div class="field">
+          <label>納期（空欄可）</label>
+          <div class="delivery-row">
+            <select id="delivery_month">
+              <option value="">月を選択</option>
+              <option value="11">11月</option>
+              <option value="12">12月</option>
+              <option value="1">1月</option>
+              <option value="2">2月</option>
+              <option value="3">3月</option>
+              <option value="4">4月</option>
+            </select>
+            <select id="delivery_period">
+              <option value="">時期を選択</option>
+              <option value="初旬">初旬</option>
+              <option value="中旬">中旬</option>
+              <option value="下旬">下旬</option>
+            </select>
+            <input type="date" id="delivery_date" placeholder="または日付指定">
           </div>
         </div>
       </div>
@@ -102,28 +130,44 @@ if (!$season) {
 const SEASON_ID = <?= (int)$season['id'] ?>;
 const GENRES = <?= json_encode($genres, JSON_UNESCAPED_UNICODE) ?>;
 
-// 受注日のデフォルトを今日にする
 document.getElementById('order_date').value = new Date().toISOString().slice(0, 10);
 
-// 納期ボタンの選択状態管理
-let selectedDeliveryType = null;
-const deliveryDateInput = document.getElementById('delivery_date');
-document.querySelectorAll('.delivery-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.delivery-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedDeliveryType = btn.dataset.value;
-    deliveryDateInput.value = '';
-  });
-});
-deliveryDateInput.addEventListener('input', () => {
-  if (deliveryDateInput.value) {
-    selectedDeliveryType = null;
-    document.querySelectorAll('.delivery-btn').forEach(b => b.classList.remove('active'));
+// 取引先：プルダウン選択時は自由入力をグレーアウト
+document.getElementById('client_select').addEventListener('change', function() {
+  const input = document.getElementById('client_name');
+  if (this.value) {
+    input.value = '';
+    input.disabled = true;
+    input.style.background = '#f0f0f0';
+  } else {
+    input.disabled = false;
+    input.style.background = '';
   }
 });
 
-// 商品行の追加・削除
+// 月プルダウンと日付入力の排他制御
+document.getElementById('delivery_month').addEventListener('change', function() {
+  if (this.value) {
+    document.getElementById('delivery_date').value = '';
+    document.getElementById('delivery_date').disabled = true;
+    document.getElementById('delivery_date').style.background = '#f0f0f0';
+  } else {
+    document.getElementById('delivery_date').disabled = false;
+    document.getElementById('delivery_date').style.background = '';
+  }
+});
+document.getElementById('delivery_date').addEventListener('change', function() {
+  if (this.value) {
+    document.getElementById('delivery_month').value = '';
+    document.getElementById('delivery_period').value = '';
+    document.getElementById('delivery_month').disabled = true;
+    document.getElementById('delivery_period').disabled = true;
+  } else {
+    document.getElementById('delivery_month').disabled = false;
+    document.getElementById('delivery_period').disabled = false;
+  }
+});
+
 function createItemRow() {
   const row = document.createElement('div');
   row.className = 'item-row';
@@ -156,7 +200,6 @@ function createItemRow() {
       productSelect.innerHTML = '<option value="">先にジャンルを選択</option>';
       return;
     }
-    productSelect.disabled = true;
     productSelect.innerHTML = '<option value="">読み込み中...</option>';
     try {
       const res = await fetch(`../api/get_products.php?genre_id=${genreId}`);
@@ -179,38 +222,54 @@ function createItemRow() {
 document.getElementById('add-row-btn').addEventListener('click', () => {
   document.getElementById('item-list').appendChild(createItemRow());
 });
-// 初期1行
 document.getElementById('item-list').appendChild(createItemRow());
-
 document.getElementById('clear-btn').addEventListener('click', () => location.reload());
 
-// 送信処理
 document.getElementById('order-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const msg = document.getElementById('msg');
   msg.className = 'msg';
-  msg.textContent = '';
 
-  const clientName = document.getElementById('client_name').value.trim();
+  // 取引先：プルダウン優先
+  const clientSelect = document.getElementById('client_select').value;
+  const clientInput = document.getElementById('client_name').value.trim();
+  const clientName = clientSelect || clientInput;
+
   const orderDate = document.getElementById('order_date').value;
-  const deliveryDate = deliveryDateInput.value;
+  const deliveryMonth = document.getElementById('delivery_month').value;
+  const deliveryPeriod = document.getElementById('delivery_period').value;
+  const deliveryDate = document.getElementById('delivery_date').value;
 
-  if (!clientName || !orderDate) {
+  if (!clientName) {
     msg.className = 'msg error';
-    msg.textContent = '取引先と受注日は必須です。';
+    msg.textContent = '取引先を入力またはプルダウンから選択してください。';
     return;
   }
-  if (!deliveryDate && !selectedDeliveryType) {
+  if (!orderDate) {
     msg.className = 'msg error';
-    msg.textContent = '納期（日付または即納/初旬/中旬/下旬）を指定してください。';
+    msg.textContent = '受注日は必須です。';
     return;
   }
+
+  // 納期の組み立て
+  let deliveryType = null;
+  let deliveryDateValue = null;
+  if (deliveryDate) {
+    deliveryType = 'date';
+    deliveryDateValue = deliveryDate;
+  } else if (deliveryMonth && deliveryPeriod) {
+    deliveryType = deliveryMonth + '月' + deliveryPeriod;
+  } else if (deliveryMonth) {
+    deliveryType = deliveryMonth + '月';
+  }
+  // 空欄の場合はnullのまま
 
   const items = [];
   document.querySelectorAll('.item-row').forEach(row => {
-    const [genreSelect, productSelect, qtyInput] = row.querySelectorAll('select, input');
-    if (productSelect.value && qtyInput.value) {
-      items.push({ product_id: parseInt(productSelect.value), quantity: parseInt(qtyInput.value) });
+    const selects = row.querySelectorAll('select');
+    const qtyInput = row.querySelector('input');
+    if (selects[1].value && qtyInput.value) {
+      items.push({ product_id: parseInt(selects[1].value), quantity: parseInt(qtyInput.value) });
     }
   });
 
@@ -224,8 +283,8 @@ document.getElementById('order-form').addEventListener('submit', async (e) => {
     season_id: SEASON_ID,
     client_name: clientName,
     order_date: orderDate,
-    delivery_type: deliveryDate ? 'date' : selectedDeliveryType,
-    delivery_date: deliveryDate || null,
+    delivery_type: deliveryType,
+    delivery_date: deliveryDateValue,
     items: items,
   };
 

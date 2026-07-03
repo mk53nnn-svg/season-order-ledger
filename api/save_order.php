@@ -18,17 +18,12 @@ if (!$input) {
 $seasonId = (int)($input['season_id'] ?? 0);
 $clientName = trim((string)($input['client_name'] ?? ''));
 $orderDate = (string)($input['order_date'] ?? '');
-$deliveryType = (string)($input['delivery_type'] ?? '');
+$deliveryType = $input['delivery_type'] ?? null;
 $deliveryDate = $input['delivery_date'] ?? null;
 $items = $input['items'] ?? [];
 
-$validDeliveryTypes = ['date', '即納', '初旬', '中旬', '下旬'];
-
-if ($seasonId <= 0 || $clientName === '' || $orderDate === '' || !in_array($deliveryType, $validDeliveryTypes, true)) {
+if ($seasonId <= 0 || $clientName === '' || $orderDate === '') {
     fail('必須項目が不足しています。');
-}
-if ($deliveryType === 'date' && !$deliveryDate) {
-    fail('納期の日付が指定されていません。');
 }
 if (!is_array($items) || count($items) === 0) {
     fail('商品が指定されていません。');
@@ -39,7 +34,6 @@ $pdo = get_pdo();
 try {
     $pdo->beginTransaction();
 
-    // 取引先名を履歴として記録（既にあれば無視）
     $stmtClient = $pdo->prepare(
         "INSERT INTO clients (name) VALUES (:name) ON DUPLICATE KEY UPDATE name = name"
     );
@@ -53,16 +47,14 @@ try {
     foreach ($items as $item) {
         $productId = (int)($item['product_id'] ?? 0);
         $quantity = (int)($item['quantity'] ?? 0);
-        if ($productId <= 0 || $quantity <= 0) {
-            continue;
-        }
+        if ($productId <= 0 || $quantity <= 0) continue;
         $stmtOrder->execute([
             'season_id' => $seasonId,
             'product_id' => $productId,
             'client_name' => $clientName,
             'order_date' => $orderDate,
             'delivery_type' => $deliveryType,
-            'delivery_date' => $deliveryType === 'date' ? $deliveryDate : null,
+            'delivery_date' => ($deliveryType === 'date') ? $deliveryDate : null,
             'quantity' => $quantity,
         ]);
     }
