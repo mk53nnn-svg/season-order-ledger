@@ -45,6 +45,20 @@ try {
             out2(['ok' => true]);
             break;
 
+        case 'delete_season':
+            $id = (int)($input['id'] ?? 0);
+            if ($id <= 0) out2(['ok' => false, 'error' => 'IDが不正です。']);
+            // 使用中のシーズンは削除不可
+            $stmt = $pdo->prepare("SELECT is_active FROM seasons WHERE id = :id");
+            $stmt->execute(['id' => $id]);
+            $season = $stmt->fetch();
+            if (!$season) out2(['ok' => false, 'error' => 'シーズンが見つかりません。']);
+            if ($season['is_active'] == 1) out2(['ok' => false, 'error' => '使用中のシーズンは削除できません。']);
+            $stmt = $pdo->prepare("DELETE FROM seasons WHERE id = :id");
+            $stmt->execute(['id' => $id]);
+            out2(['ok' => true]);
+            break;
+
         default:
             out2(['ok' => false, 'error' => '不明なアクションです。']);
     }
