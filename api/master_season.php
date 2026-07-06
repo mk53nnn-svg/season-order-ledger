@@ -45,6 +45,19 @@ try {
             out2(['ok' => true]);
             break;
 
+        case 'update_season':
+            $id = (int)($input['id'] ?? 0);
+            $name = trim((string)($input['name'] ?? ''));
+            $start = (string)($input['start_date'] ?? '');
+            $end = (string)($input['end_date'] ?? '');
+            if ($id <= 0 || $name === '' || $start === '' || $end === '') {
+                out2(['ok' => false, 'error' => '入力内容が正しくありません。']);
+            }
+            $stmt = $pdo->prepare("UPDATE seasons SET name = :name, start_date = :start, end_date = :end WHERE id = :id");
+            $stmt->execute(['name' => $name, 'start' => $start, 'end' => $end, 'id' => $id]);
+            out2(['ok' => true]);
+            break;
+
         case 'delete_season':
             $id = (int)($input['id'] ?? 0);
             if ($id <= 0) out2(['ok' => false, 'error' => 'IDが不正です。']);

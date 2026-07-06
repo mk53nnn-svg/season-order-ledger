@@ -371,6 +371,35 @@ async function deleteProduct(id) {
   await loadMaster();
 }
 
+function editSeason(btn, id) {
+  const row = btn.closest('tr');
+  const name = row.cells[0].textContent;
+  const start = row.cells[1].textContent;
+  const end = row.cells[2].textContent;
+  row.cells[0].innerHTML = `<input type="text" class="inline-edit e-season-name" value="${escapeHtml(name)}">`;
+  row.cells[1].innerHTML = `<input type="date" class="inline-edit e-season-start" value="${start}">`;
+  row.cells[2].innerHTML = `<input type="date" class="inline-edit e-season-end" value="${end}">`;
+  row.cells[4].innerHTML = `<div class="row-actions">
+    <button class="btn-mini btn-confirm" onclick="confirmEditSeason(this, ${id})">保存</button>
+    <button class="btn-mini btn-cancel" onclick="loadSeasons()">取消</button>
+  </div>`;
+}
+
+async function confirmEditSeason(btn, id) {
+  const row = btn.closest('tr');
+  const name = row.querySelector('.e-season-name').value.trim();
+  const start = row.querySelector('.e-season-start').value;
+  const end = row.querySelector('.e-season-end').value;
+  if (!name || !start || !end) { showMsg('すべての項目を入力してください', true); return; }
+  const res = await fetch('../api/master_season.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'update_season', id, name, start_date: start, end_date: end}),
+  });
+  const result = await res.json();
+  if (result.ok) { showMsg('更新しました'); await loadSeasons(); }
+  else { showMsg(result.error || '更新に失敗しました', true); }
+}
+
 async function loadSeasons() {
   const res = await fetch('../api/master_season.php');
   const result = await res.json();
@@ -383,6 +412,7 @@ async function loadSeasons() {
       <td>${s.end_date}</td>
       <td>${s.is_active == 1 ? '<span style="color:#1e7e34;font-weight:600;">使用中</span>' : ''}</td>
       <td><div class="row-actions">
+        <button class="btn-mini btn-edit" onclick="editSeason(this, ${s.id})">編集</button>
         ${s.is_active != 1 ? `<button class="btn-mini btn-edit" onclick="activateSeason(${s.id})">切り替える</button>` : ''}
         ${s.is_active != 1 ? `<button class="btn-mini btn-delete" onclick="deleteSeason(${s.id}, '${escapeHtml(s.name)}')">削除</button>` : ''}
       </div></td>
