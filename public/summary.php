@@ -80,8 +80,8 @@ if (!$selectedSeasonId) {
       <tr>
         <th style="width:130px;">ジャンル</th>
         <th>商品名 ／ コード</th>
-        <th class="num" style="width:100px;">受注件数</th>
-        <th class="num" style="width:100px;">発注件数</th>
+        <th class="num" style="width:100px;">受注数</th>
+        <th class="num" style="width:100px;">発注数</th>
         <th class="num" style="width:90px;">在庫</th>
         <th style="width:110px;">状態</th>
       </tr>
@@ -156,8 +156,8 @@ function renderTable(data) {
             </div>
           </div>
         </td>
-        <td class="num">${row.order_count}</td>
-        <td class="num">${row.po_count}</td>
+        <td class="num">${row.order_qty_sum}</td>
+        <td class="num">${row.po_qty_sum}</td>
         <td class="num stock-num ${stockClass}">${stockDisplay}</td>
         <td>${statusBtn}</td>
       </tr>
