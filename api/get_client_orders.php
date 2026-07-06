@@ -26,9 +26,20 @@ $orders = $stmt->fetchAll();
 
 $total = array_sum(array_column($orders, 'quantity'));
 
+$formatted = array_map(function($o) {
+    $deliveryLabel = '';
+    if ($o['delivery_type'] === 'date' && $o['delivery_date']) {
+        $d = new DateTime($o['delivery_date']);
+        $deliveryLabel = $d->format('n/j');
+    } elseif ($o['delivery_type']) {
+        $deliveryLabel = $o['delivery_type'];
+    }
+    return array_merge($o, ['delivery_label' => $deliveryLabel]);
+}, $orders);
+
 echo json_encode([
     'ok' => true,
     'client_name' => $clientName,
-    'orders' => $orders,
+    'orders' => $formatted,
     'total' => $total,
 ], JSON_UNESCAPED_UNICODE);

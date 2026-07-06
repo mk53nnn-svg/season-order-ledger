@@ -217,7 +217,7 @@ async function showClientOrders(clientName) {
         <td>${o.order_date}</td>
         <td>${escapeHtml(o.product_name)}</td>
         <td style="text-align:right;">${o.quantity}</td>
-        <td>${o.delivery_type ? escapeHtml(o.delivery_type) : '−'}</td>
+        <td>${o.delivery_label ? escapeHtml(o.delivery_label) : '−'}</td>
       </tr>`).join('') +
       `<tr style="font-weight:600;background:#fafafa;">
         <td colspan="2" style="text-align:right;color:#888;font-size:12px;">合計</td>
