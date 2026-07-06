@@ -413,7 +413,7 @@ async function loadSeasons() {
       <td>${s.is_active == 1 ? '<span style="color:#1e7e34;font-weight:600;">使用中</span>' : ''}</td>
       <td><div class="row-actions">
         <button class="btn-mini btn-edit" onclick="editSeason(this, ${s.id})">編集</button>
-        ${s.is_active != 1 ? `<button class="btn-mini btn-edit" onclick="activateSeason(${s.id})">切り替える</button>` : ''}
+        ${s.is_active != 1 ? `<button class="btn-mini btn-edit" onclick="activateSeason(${s.id})">切替</button>` : ''}
         ${s.is_active != 1 ? `<button class="btn-mini btn-delete" onclick="deleteSeason(${s.id}, '${escapeHtml(s.name)}')">削除</button>` : ''}
       </div></td>
     </tr>`).join('');
