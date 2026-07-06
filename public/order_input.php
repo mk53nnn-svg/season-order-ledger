@@ -99,6 +99,7 @@ $clients = $clientsStmt->fetchAll();
             </select>
             <select id="delivery_period">
               <option value="">時期を選択</option>
+              <option value="即納">即納</option>
               <option value="初旬">初旬</option>
               <option value="中旬">中旬</option>
               <option value="下旬">下旬</option>
