@@ -82,8 +82,8 @@
   <div class="panel" id="panel-client">
     <p class="note">取引先名をクリックすると今シーズンの受注一覧を表示します。</p>
     <table>
-      <thead><tr><th>取引先名</th><th style="width:160px;"></th></tr></thead>
-      <tbody id="client-tbody"></tbody>
+      <thead><tr><th>取引先名</th><th style="width:220px;"></th></tr></thead>
+      <tbody id="season-tbody"></tbody>
     </table>
   </div>
 
