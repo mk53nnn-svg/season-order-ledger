@@ -48,6 +48,9 @@ if (!$selectedSeasonId) {
   .date-row label { font-size: 13px; color: #555; }
   .date-row input { height: 36px; border-radius: 8px; border: 1px solid #ccc; padding: 0 10px; font-size: 14px; }
   .loading { padding: 40px; text-align: center; color: #999; }
+  .code-chip.copied { background: #e6f4ea; border-color: #b7d9bf; color: #1e7e34; }
+  .copy-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: #222; color: #fff; font-size: 12px; padding: 8px 16px; border-radius: 8px; opacity: 0; transition: all 0.2s; pointer-events: none; z-index: 100; }
+  .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; }
   .modal-overlay.show { display: flex; align-items: center; justify-content: center; }
   .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
@@ -84,6 +87,8 @@ if (!$selectedSeasonId) {
   </div>
   <div class="msg" id="msg"></div>
 </div>
+
+<div class="copy-toast" id="copy-toast">コードをコピーしました</div>
 
 <!-- 確認モーダル -->
 <div class="modal-overlay" id="confirm-modal">
@@ -134,7 +139,7 @@ function renderTable(data) {
           <td>
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="product-name">${escapeHtml(row.product_name)}</span>
-              ${row.product_code ? `<span class="code-chip">${escapeHtml(row.product_code)}</span>` : ''}
+              ${row.product_code ? `<span class="code-chip" onclick="copyCode('${row.product_code}', this)" style="cursor:pointer;" title="クリックでコピー">${escapeHtml(row.product_code)}</span>` : ''}
             </div>
           </td>
           <td class="num">${row.order_qty_sum}</td>
@@ -241,6 +246,15 @@ async function executeOrder() {
     msg.className = 'msg error';
     msg.textContent = '通信エラーが発生しました。';
   }
+}
+
+function copyCode(code, el) {
+  navigator.clipboard.writeText(code).catch(() => {});
+  el.classList.add('copied');
+  const toast = document.getElementById('copy-toast');
+  toast.classList.add('show');
+  setTimeout(() => el.classList.remove('copied'), 1000);
+  setTimeout(() => toast.classList.remove('show'), 1400);
 }
 
 function escapeHtml(str) {
