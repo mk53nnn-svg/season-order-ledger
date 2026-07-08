@@ -22,7 +22,7 @@ $clients = $clientsStmt->fetchAll();
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; background: #f5f5f5; color: #222; }
-  .page { max-width: 680px; margin: 0 auto; padding: 24px 16px; }
+  .page { max-width: 680px; margin: 0 auto; padding: 24px 16px; padding-bottom: 300px; }
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .header h1 { font-size: 18px; font-weight: 600; }
   .header .season { font-size: 13px; color: #666; background: #fff; padding: 4px 10px; border-radius: 999px; }
