@@ -81,7 +81,7 @@ try {
                 INSERT INTO products (genre_id, product_code, product_name, display_order)
                 VALUES (:genre_id, :code, :name, :order)
             ");
-            $stmt->execute(['genre_id' => $genreId, 'code' => $code, 'name' => $name, 'order' => $maxOrder + 1]);
+            $stmt->execute(['genre_id' => $genreId, 'code' => $code ?? '', 'name' => $name, 'order' => $maxOrder + 1]);
             out(['ok' => true]);
             break;
 
