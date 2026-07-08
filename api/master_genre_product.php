@@ -68,8 +68,8 @@ try {
             $genreId = (int)($input['genre_id'] ?? 0);
             $code = trim((string)($input['product_code'] ?? ''));
             $name = trim((string)($input['product_name'] ?? ''));
-            if ($genreId <= 0 || $code === '' || $name === '') {
-                out(['ok' => false, 'error' => '入力内容が正しくありません。']);
+            if ($genreId <= 0 || $name === '') {
+                out(['ok' => false, 'error' => 'ジャンルと商品名は必須です。']);
             }
             $stmt = $pdo->prepare("
                 SELECT COALESCE(MAX(display_order), 0) AS m FROM products WHERE genre_id = :gid
