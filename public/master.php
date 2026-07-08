@@ -68,8 +68,8 @@
   <div class="panel" id="panel-product">
     <div class="add-row">
       <select id="new-product-genre"></select>
-      <input type="text" id="new-product-code" placeholder="商品コード">
       <input type="text" id="new-product-name" placeholder="商品名">
+      <input type="text" id="new-product-code" placeholder="商品コード">
       <button onclick="addProduct()">追加する</button>
     </div>
     <table>
