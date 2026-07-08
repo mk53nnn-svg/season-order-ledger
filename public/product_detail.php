@@ -193,7 +193,10 @@ function renderOrderRow(o) {
       <td class="td-client">${escapeHtml(o.client_name)}</td>
       <td class="td-deadline" data-type="${o.delivery_type || ''}" data-date="${o.delivery_date || ''}">${deliveryLabel}</td>
       <td class="num td-qty">${o.quantity}</td>
-      <td><button class="edit-btn" onclick="startEdit(this)">編集</button></td>
+      <td><div class="row-actions">
+        <button class="edit-btn" onclick="startEdit(this)">編集</button>
+        <button class="delete-btn" onclick="deleteOrder(${o.id})">削除</button>
+      </div></td>
     </tr>
   `;
 }
@@ -317,6 +320,17 @@ async function confirmEdit(btn) {
       delivery_date: deliveryType === 'date' ? deliveryDate : null,
       quantity: quantity,
     }),
+  });
+  await loadDetail();
+}
+
+async function deleteOrder(orderId) {
+  if (!confirm('この受注内訳を削除しますか？')) return;
+  if (!confirm('本当に削除しますか？この操作は取り消せません。')) return;
+  await fetch('../api/delete_order.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: orderId }),
   });
   await loadDetail();
 }
