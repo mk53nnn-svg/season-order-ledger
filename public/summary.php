@@ -84,6 +84,7 @@ if (!$selectedSeasonId) {
         <option value="needed">未発注のみ</option>
       </select>
       <button class="expand-all-btn" id="expand-all-btn" onclick="toggleAllGenres()">すべて展開</button>
+      <button class="expand-all-btn" onclick="window.location.href='bulk_order.php?season_id='+seasonSelect.value" style="color:#2b6cb0;border-color:#2b6cb0;background:#eef5fc;">一括発注</button>
       <button class="btn-excel" id="excel-btn">Excel出力</button>
     </div>
   </div>

@@ -25,7 +25,7 @@ $products = $stmt->fetchAll();
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>開始時在庫の一括入力 - シーズン受注台帳</title>
+<title>棚卸在庫一括入力 - シーズン受注台帳</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; background: #f5f5f5; color: #222; }
@@ -51,10 +51,10 @@ $products = $stmt->fetchAll();
 <body>
 <div class="page">
   <div class="header">
-    <h1>開始時在庫の一括入力</h1>
+    <h1>棚卸在庫一括入力</h1>
     <span class="season"><?= htmlspecialchars($season['name']) ?></span>
   </div>
-  <p class="note">シーズン開始時点で手元にある在庫数を商品ごとに入力してください。あとから商品詳細ページで個別に修正することもできます。</p>
+  <p class="note">棚卸時の在庫数を商品ごとに入力してください。あとから商品詳細ページで個別に修正することもできます。</p>
 
   <table>
     <thead>
