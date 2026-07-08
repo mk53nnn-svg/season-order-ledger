@@ -51,7 +51,7 @@ function get_products_by_genre(int $genreId): array
  * 納期表示用の文字列を整形する
  * delivery_type が 'date' の場合は日付を、それ以外はそのままラベルを返す
  */
-function format_delivery(string $deliveryType, ?string $deliveryDate): string
+function format_delivery(?string $deliveryType, ?string $deliveryDate): string
 {
     if ($deliveryType === 'date' && $deliveryDate) {
         $d = new DateTime($deliveryDate);
