@@ -11,10 +11,11 @@ if (!$season) {
 $pdo = get_pdo();
 $stmt = $pdo->prepare("
   SELECT p.id AS product_id, p.product_code, p.product_name, g.name AS genre_name,
-         COALESCE(ist.quantity, 0) AS initial_stock
+         COALESCE(po.quantity, 0) AS initial_stock
   FROM products p
   INNER JOIN genres g ON g.id = p.genre_id
-  LEFT JOIN initial_stocks ist ON ist.product_id = p.id AND ist.season_id = :season_id
+  LEFT JOIN purchase_orders po ON po.product_id = p.id
+    AND po.season_id = :season_id AND po.order_date = '棚卸'
   WHERE p.is_active = 1
   ORDER BY g.display_order ASC, g.id ASC, p.display_order ASC, p.id ASC
 ");
@@ -49,16 +50,17 @@ $products = $stmt->fetchAll();
 </style>
 </head>
 <body>
+<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #eee;"><a href="index.php" style="font-size:12px;color:#888;text-decoration:none;">&laquo; ホーム</a></div>
 <div class="page">
   <div class="header">
     <h1>棚卸在庫一括入力</h1>
     <span class="season"><?= htmlspecialchars($season['name']) ?></span>
   </div>
-  <p class="note">棚卸時の在庫数を商品ごとに入力してください。あとから商品詳細ページで個別に修正することもできます。</p>
+  <p class="note">棚卸時の在庫数を商品ごとに入力してください。登録すると発注履歴の「棚卸在庫」として記録されます。</p>
 
   <table>
     <thead>
-      <tr><th>ジャンル</th><th>商品名</th><th>コード</th><th>開始時在庫</th></tr>
+      <tr><th>ジャンル</th><th>商品名</th><th>コード</th><th>棚卸在庫数</th></tr>
     </thead>
     <tbody>
       <?php foreach ($products as $p): ?>
@@ -91,14 +93,15 @@ document.getElementById('save-btn').addEventListener('click', async () => {
 
   const stocks = [];
   document.querySelectorAll('.stock-input').forEach(input => {
+    const qty = parseInt(input.value) || 0;
     stocks.push({
       product_id: parseInt(input.dataset.productId),
-      quantity: parseInt(input.value) || 0,
+      quantity: qty,
     });
   });
 
   try {
-    const res = await fetch('../api/save_initial_stocks.php', {
+    const res = await fetch('../api/save_tanoroshi.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ season_id: SEASON_ID, stocks }),
@@ -106,7 +109,8 @@ document.getElementById('save-btn').addEventListener('click', async () => {
     const result = await res.json();
     if (result.ok) {
       msg.className = 'msg success';
-      msg.textContent = '保存しました。';
+      msg.textContent = '保存しました。発注履歴に「棚卸在庫」として登録されました。';
+      location.reload();
     } else {
       msg.className = 'msg error';
       msg.textContent = '保存に失敗しました：' + (result.error || '不明なエラー');

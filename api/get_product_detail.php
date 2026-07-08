@@ -51,12 +51,12 @@ $ordersFormatted = array_map(function ($o) use (&$orderTotal) {
     ];
 }, $orders);
 
-// 発注履歴
+// 発注履歴（棚卸を一番上、それ以外は日付順）
 $stmt = $pdo->prepare("
   SELECT id, order_date, quantity
   FROM purchase_orders
   WHERE product_id = :product_id AND season_id = :season_id
-  ORDER BY order_date ASC, id ASC
+  ORDER BY CASE WHEN order_date = '棚卸' THEN 0 ELSE 1 END ASC, id ASC
 ");
 $stmt->execute(['product_id' => $productId, 'season_id' => $seasonId]);
 $poRows = $stmt->fetchAll();
@@ -68,18 +68,12 @@ $poFormatted = array_map(function ($po) use (&$poTotal) {
         'id' => (int)$po['id'],
         'order_date' => $po['order_date'],
         'quantity' => (int)$po['quantity'],
+        'is_tanoroshi' => $po['order_date'] === '棚卸',
     ];
 }, $poRows);
 
-// 開始時在庫
-$stmt = $pdo->prepare("
-  SELECT quantity FROM initial_stocks WHERE product_id = :product_id AND season_id = :season_id
-");
-$stmt->execute(['product_id' => $productId, 'season_id' => $seasonId]);
-$initialStockRow = $stmt->fetch();
-$initialStock = $initialStockRow ? (int)$initialStockRow['quantity'] : 0;
-
-$stock = $initialStock + $poTotal - $orderTotal;
+// 在庫 = 発注合計 - 受注合計（initial_stocksは使わない）
+$stock = $poTotal - $orderTotal;
 
 echo json_encode([
     'ok' => true,
@@ -88,6 +82,5 @@ echo json_encode([
     'order_total' => $orderTotal,
     'purchase_orders' => $poFormatted,
     'po_total' => $poTotal,
-    'initial_stock' => $initialStock,
     'stock' => $stock,
 ], JSON_UNESCAPED_UNICODE);
