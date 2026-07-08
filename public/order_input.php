@@ -59,10 +59,10 @@ $clients = $clientsStmt->fetchAll();
   .custom-select-trigger .arrow { font-size: 10px; color: #888; }
   .custom-select-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 1000; max-height: 240px; overflow-y: auto; display: none; }
   .custom-select-dropdown.open { display: block; }
-  .custom-select-option { padding: 8px 12px; font-size: 13px; cursor: pointer; }
+  .custom-select-option { padding: 8px 12px; font-size: 14px; color: #222; cursor: pointer; }
   .custom-select-option:hover { background: #f0f5ff; }
   .custom-select-option.selected { background: #eef5fc; color: #2b6cb0; font-weight: 600; }
-  .custom-select-option.placeholder { color: #999; }
+  .custom-select-option.placeholder { color: #555; }
 </style>
 </head>
 <body>
