@@ -11,7 +11,7 @@ if (!$season) {
 }
 
 $pdo = get_pdo();
-$clientsStmt = $pdo->query("SELECT id, name FROM clients ORDER BY name ASC");
+$clientsStmt = $pdo->query("SELECT id, name FROM clients ORDER BY display_order ASC, id ASC");
 $clients = $clientsStmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -22,7 +22,7 @@ $clients = $clientsStmt->fetchAll();
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; background: #f5f5f5; color: #222; }
-  .page { max-width: 680px; margin: 0 auto; padding: 24px 16px; padding-bottom: 300px; }
+  .page { max-width: 680px; margin: 0 auto; padding: 24px 16px; }
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .header h1 { font-size: 18px; font-weight: 600; }
   .header .season { font-size: 13px; color: #666; background: #fff; padding: 4px 10px; border-radius: 999px; }
@@ -38,9 +38,9 @@ $clients = $clientsStmt->fetchAll();
   .client-note { font-size: 11px; color: #999; }
   .delivery-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
   .delivery-row select { height: 38px; border-radius: 8px; border: 1px solid #ccc; padding: 0 8px; font-size: 14px; background: #fafafa; }
-  .item-row { display: grid; grid-template-columns: 1fr 1fr 90px 32px; gap: 8px; align-items: center; margin-bottom: 10px; }
-  .item-row select, .item-row input { height: 36px; border-radius: 8px; border: 1px solid #ccc; padding: 0 8px; font-size: 13px; background: #fafafa; }
-  .del-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #999; cursor: pointer; font-size: 16px; }
+  .item-row { display: grid; grid-template-columns: 1fr 1fr 90px 32px; gap: 8px; align-items: start; margin-bottom: 10px; }
+  .item-row input { height: 36px; border-radius: 8px; border: 1px solid #ccc; padding: 0 8px; font-size: 13px; background: #fafafa; }
+  .del-btn { width: 32px; height: 36px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #999; cursor: pointer; font-size: 16px; margin-top: 0; }
   .add-btn { font-size: 12px; color: #2b6cb0; border: 1px solid #2b6cb0; background: #eef5fc; border-radius: 8px; padding: 6px 12px; cursor: pointer; margin-bottom: 4px; }
   .col-labels { display: grid; grid-template-columns: 1fr 1fr 90px 32px; gap: 8px; margin-bottom: 4px; }
   .col-labels span { font-size: 11px; color: #999; }
@@ -50,6 +50,19 @@ $clients = $clientsStmt->fetchAll();
   .msg { margin-top: 14px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
   .msg.success { background: #e6f4ea; color: #1e7e34; display: block; }
   .msg.error { background: #fdecea; color: #c0392b; display: block; }
+
+  /* カスタムドロップダウン */
+  .custom-select { position: relative; width: 100%; }
+  .custom-select-trigger { height: 36px; border-radius: 8px; border: 1px solid #ccc; padding: 0 10px; font-size: 13px; background: #fafafa; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+  .custom-select-trigger:hover { border-color: #4a90d9; }
+  .custom-select-trigger.open { border-color: #4a90d9; background: #fff; }
+  .custom-select-trigger .arrow { font-size: 10px; color: #888; }
+  .custom-select-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 1000; max-height: 240px; overflow-y: auto; display: none; }
+  .custom-select-dropdown.open { display: block; }
+  .custom-select-option { padding: 8px 12px; font-size: 13px; cursor: pointer; }
+  .custom-select-option:hover { background: #f0f5ff; }
+  .custom-select-option.selected { background: #eef5fc; color: #2b6cb0; font-weight: 600; }
+  .custom-select-option.placeholder { color: #999; }
 </style>
 </head>
 <body>
@@ -133,7 +146,7 @@ const GENRES = <?= json_encode($genres, JSON_UNESCAPED_UNICODE) ?>;
 
 document.getElementById('order_date').value = new Date().toISOString().slice(0, 10);
 
-// 取引先：プルダウン選択時は自由入力をグレーアウト
+// 取引先プルダウン選択時に自由入力をグレーアウト
 document.getElementById('client_select').addEventListener('change', function() {
   const input = document.getElementById('client_name');
   if (this.value) {
@@ -169,17 +182,146 @@ document.getElementById('delivery_date').addEventListener('change', function() {
   }
 });
 
+// カスタムドロップダウン作成
+function createCustomSelect(options, placeholder, onChange) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'custom-select';
+
+  const trigger = document.createElement('div');
+  trigger.className = 'custom-select-trigger';
+  trigger.innerHTML = `<span class="selected-label">${placeholder}</span><span class="arrow">▼</span>`;
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'custom-select-dropdown';
+
+  const placeholderOpt = document.createElement('div');
+  placeholderOpt.className = 'custom-select-option placeholder';
+  placeholderOpt.textContent = placeholder;
+  placeholderOpt.addEventListener('click', () => {
+    trigger.querySelector('.selected-label').textContent = placeholder;
+    trigger.classList.remove('open');
+    dropdown.classList.remove('open');
+    wrapper._value = '';
+    onChange('');
+  });
+  dropdown.appendChild(placeholderOpt);
+
+  options.forEach(opt => {
+    const el = document.createElement('div');
+    el.className = 'custom-select-option';
+    el.textContent = opt.label;
+    el.dataset.value = opt.value;
+    el.addEventListener('click', () => {
+      trigger.querySelector('.selected-label').textContent = opt.label;
+      dropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      trigger.classList.remove('open');
+      dropdown.classList.remove('open');
+      wrapper._value = opt.value;
+      onChange(opt.value);
+    });
+    dropdown.appendChild(el);
+  });
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.classList.contains('open');
+    // 他の全ドロップダウンを閉じる
+    document.querySelectorAll('.custom-select-dropdown.open').forEach(d => {
+      d.classList.remove('open');
+      d.previousElementSibling.classList.remove('open');
+    });
+    if (!isOpen) {
+      dropdown.classList.add('open');
+      trigger.classList.add('open');
+    }
+  });
+
+  wrapper._value = '';
+  wrapper.appendChild(trigger);
+  wrapper.appendChild(dropdown);
+  return wrapper;
+}
+
+// ドロップダウンを閉じる
+document.addEventListener('click', () => {
+  document.querySelectorAll('.custom-select-dropdown.open').forEach(d => {
+    d.classList.remove('open');
+    d.previousElementSibling.classList.remove('open');
+  });
+});
+
 function createItemRow() {
   const row = document.createElement('div');
   row.className = 'item-row';
 
-  const genreSelect = document.createElement('select');
-  genreSelect.innerHTML = '<option value="">ジャンル選択</option>' +
-    GENRES.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+  // ジャンルカスタムドロップダウン
+  const genreOptions = GENRES.map(g => ({ value: String(g.id), label: g.name }));
+  let productCustomSelect = null;
 
-  const productSelect = document.createElement('select');
-  productSelect.disabled = true;
-  productSelect.innerHTML = '<option value="">先にジャンルを選択</option>';
+  const genreCustomSelect = createCustomSelect(genreOptions, 'ジャンル選択', async (genreId) => {
+    if (productCustomSelect) {
+      productCustomSelect.querySelector('.selected-label').textContent = '商品を選択';
+      productCustomSelect._value = '';
+      const dropdown = productCustomSelect.querySelector('.custom-select-dropdown');
+      dropdown.innerHTML = '';
+      const ph = document.createElement('div');
+      ph.className = 'custom-select-option placeholder';
+      ph.textContent = '商品を選択';
+      dropdown.appendChild(ph);
+    }
+
+    if (!genreId) return;
+
+    try {
+      const res = await fetch(`../api/get_products.php?genre_id=${genreId}`);
+      const products = await res.json();
+      if (productCustomSelect) {
+        const dropdown = productCustomSelect.querySelector('.custom-select-dropdown');
+        dropdown.innerHTML = '';
+        const ph = document.createElement('div');
+        ph.className = 'custom-select-option placeholder';
+        ph.textContent = '商品を選択';
+        ph.addEventListener('click', () => {
+          productCustomSelect.querySelector('.selected-label').textContent = '商品を選択';
+          productCustomSelect._value = '';
+          dropdown.classList.remove('open');
+          productCustomSelect.querySelector('.custom-select-trigger').classList.remove('open');
+        });
+        dropdown.appendChild(ph);
+
+        products.forEach(p => {
+          const el = document.createElement('div');
+          el.className = 'custom-select-option';
+          el.textContent = p.product_name;
+          el.dataset.value = p.id;
+          el.addEventListener('click', () => {
+            productCustomSelect.querySelector('.selected-label').textContent = p.product_name;
+            dropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            productCustomSelect._value = String(p.id);
+            dropdown.classList.remove('open');
+            productCustomSelect.querySelector('.custom-select-trigger').classList.remove('open');
+          });
+          dropdown.appendChild(el);
+        });
+      }
+    } catch (e) {}
+  });
+
+  // 商品カスタムドロップダウン
+  productCustomSelect = createCustomSelect([], '先にジャンルを選択', () => {});
+  productCustomSelect.querySelector('.custom-select-trigger').style.pointerEvents = 'none';
+  productCustomSelect.querySelector('.custom-select-trigger').style.opacity = '0.6';
+
+  // ジャンル選択後に商品を有効化
+  const origGenreOnChange = genreOptions;
+  genreCustomSelect.querySelector('.custom-select-trigger').addEventListener('click', () => {
+    setTimeout(() => {
+      productCustomSelect.querySelector('.custom-select-trigger').style.pointerEvents = '';
+      productCustomSelect.querySelector('.custom-select-trigger').style.opacity = '';
+    }, 100);
+  });
 
   const qtyInput = document.createElement('input');
   qtyInput.type = 'number';
@@ -194,27 +336,8 @@ function createItemRow() {
     if (document.querySelectorAll('.item-row').length > 1) row.remove();
   };
 
-  genreSelect.addEventListener('change', async () => {
-    const genreId = genreSelect.value;
-    if (!genreId) {
-      productSelect.disabled = true;
-      productSelect.innerHTML = '<option value="">先にジャンルを選択</option>';
-      return;
-    }
-    productSelect.innerHTML = '<option value="">読み込み中...</option>';
-    try {
-      const res = await fetch(`../api/get_products.php?genre_id=${genreId}`);
-      const products = await res.json();
-      productSelect.innerHTML = '<option value="">商品を選択</option>' +
-        products.map(p => `<option value="${p.id}">${p.product_name}</option>`).join('');
-      productSelect.disabled = false;
-    } catch (e) {
-      productSelect.innerHTML = '<option value="">読み込み失敗</option>';
-    }
-  });
-
-  row.appendChild(genreSelect);
-  row.appendChild(productSelect);
+  row.appendChild(genreCustomSelect);
+  row.appendChild(productCustomSelect);
   row.appendChild(qtyInput);
   row.appendChild(delBtn);
   return row;
@@ -231,7 +354,6 @@ document.getElementById('order-form').addEventListener('submit', async (e) => {
   const msg = document.getElementById('msg');
   msg.className = 'msg';
 
-  // 取引先：プルダウン優先
   const clientSelect = document.getElementById('client_select').value;
   const clientInput = document.getElementById('client_name').value.trim();
   const clientName = clientSelect || clientInput;
@@ -252,7 +374,6 @@ document.getElementById('order-form').addEventListener('submit', async (e) => {
     return;
   }
 
-  // 納期の組み立て
   let deliveryType = null;
   let deliveryDateValue = null;
   if (deliveryDate) {
@@ -263,14 +384,14 @@ document.getElementById('order-form').addEventListener('submit', async (e) => {
   } else if (deliveryMonth) {
     deliveryType = deliveryMonth + '月';
   }
-  // 空欄の場合はnullのまま
 
   const items = [];
   document.querySelectorAll('.item-row').forEach(row => {
-    const selects = row.querySelectorAll('select');
+    const selects = row.querySelectorAll('.custom-select');
     const qtyInput = row.querySelector('input');
-    if (selects[1].value && qtyInput.value) {
-      items.push({ product_id: parseInt(selects[1].value), quantity: parseInt(qtyInput.value) });
+    const productId = selects[1] ? selects[1]._value : '';
+    if (productId && qtyInput.value) {
+      items.push({ product_id: parseInt(productId), quantity: parseInt(qtyInput.value) });
     }
   });
 
