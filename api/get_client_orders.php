@@ -19,6 +19,7 @@ $stmt = $pdo->prepare("
     INNER JOIN products p ON p.id = o.product_id
     INNER JOIN genres g ON g.id = p.genre_id
     WHERE o.client_name = :client_name AND o.season_id = :season_id
+    AND p.is_active = 1 AND g.is_active = 1
     ORDER BY o.order_date ASC, o.id ASC
 ");
 $stmt->execute(['client_name' => $clientName, 'season_id' => $seasonId]);
