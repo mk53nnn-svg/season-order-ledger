@@ -48,6 +48,17 @@ if (!$selectedSeasonId) {
   .date-row label { font-size: 13px; color: #555; }
   .date-row input { height: 36px; border-radius: 8px; border: 1px solid #ccc; padding: 0 10px; font-size: 14px; }
   .loading { padding: 40px; text-align: center; color: #999; }
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; }
+  .modal-overlay.show { display: flex; align-items: center; justify-content: center; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+  .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .modal .sub { font-size: 12px; color: #888; margin-bottom: 16px; }
+  .modal table { width: 100%; font-size: 13px; border-collapse: collapse; }
+  .modal th { text-align: left; font-size: 11px; color: #888; padding: 6px 8px; border-bottom: 1px solid #eee; }
+  .modal td { padding: 8px 8px; border-bottom: 1px solid #eee; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .modal-actions .btn-primary { flex: 1; height: 40px; border-radius: 8px; border: none; background: #222; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .modal-actions .btn-cancel { height: 40px; padding: 0 20px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #555; font-size: 14px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -72,6 +83,22 @@ if (!$selectedSeasonId) {
     <button class="btn-primary" onclick="submitBulkOrder()">一括発注を登録する</button>
   </div>
   <div class="msg" id="msg"></div>
+</div>
+
+<!-- 確認モーダル -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <h2>発注内容の確認</h2>
+    <p class="sub" id="confirm-date"></p>
+    <table>
+      <thead><tr><th>商品名</th><th style="text-align:right;">発注数</th></tr></thead>
+      <tbody id="confirm-tbody"></tbody>
+    </table>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">修正する</button>
+      <button class="btn-primary" onclick="executeOrder()">登録する</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -139,7 +166,9 @@ function renderTable(data) {
   }).join('');
 }
 
-async function submitBulkOrder() {
+let pendingItems = [];
+
+function submitBulkOrder() {
   const msg = document.getElementById('msg');
   msg.className = 'msg';
 
@@ -150,34 +179,58 @@ async function submitBulkOrder() {
     return;
   }
 
-  const items = [];
+  pendingItems = [];
   document.querySelectorAll('.order-input').forEach(input => {
     const qty = parseInt(input.value);
     if (qty > 0) {
-      items.push({
+      const row = input.closest('tr');
+      const productName = row.querySelector('.product-name').textContent;
+      pendingItems.push({
         product_id: parseInt(input.dataset.productId),
+        product_name: productName,
         quantity: qty,
         order_date: orderDate,
       });
     }
   });
 
-  if (items.length === 0) {
+  if (pendingItems.length === 0) {
     msg.className = 'msg error';
     msg.textContent = '発注数を1件以上入力してください。';
     return;
   }
 
+  // 確認モーダルを表示
+  const d = new Date(orderDate);
+  document.getElementById('confirm-date').textContent =
+    `発注日：${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日　合計 ${pendingItems.length} 件`;
+  document.getElementById('confirm-tbody').innerHTML = pendingItems.map(item => `
+    <tr>
+      <td>${escapeHtml(item.product_name)}</td>
+      <td style="text-align:right;">${item.quantity}</td>
+    </tr>`).join('');
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-modal').classList.remove('show');
+}
+
+async function executeOrder() {
+  closeConfirm();
+  const msg = document.getElementById('msg');
+  msg.className = 'msg';
+
   try {
     const res = await fetch('../api/bulk_order.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ season_id: SEASON_ID, items }),
+      body: JSON.stringify({ season_id: SEASON_ID, items: pendingItems }),
     });
     const result = await res.json();
     if (result.ok) {
       msg.className = 'msg success';
-      msg.textContent = `${items.length}件の発注を登録しました。`;
+      msg.textContent = `${pendingItems.length}件の発注を登録しました。`;
       document.querySelectorAll('.order-input').forEach(i => i.value = '');
       await loadData();
     } else {
