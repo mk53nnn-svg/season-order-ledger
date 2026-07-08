@@ -34,10 +34,7 @@ $pdo = get_pdo();
 try {
     $pdo->beginTransaction();
 
-    $stmtClient = $pdo->prepare(
-        "INSERT INTO clients (name) VALUES (:name) ON DUPLICATE KEY UPDATE name = name"
-    );
-    $stmtClient->execute(['name' => $clientName]);
+    // 取引先の自動登録はしない（マスタ管理から手動登録する運用）
 
     $stmtOrder = $pdo->prepare(
         "INSERT INTO orders (season_id, product_id, client_name, order_date, delivery_type, delivery_date, quantity)
