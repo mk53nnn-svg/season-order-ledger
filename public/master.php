@@ -340,7 +340,7 @@ async function addProduct() {
   const genreId = parseInt(document.getElementById('new-product-genre').value);
   const code = document.getElementById('new-product-code').value.trim();
   const name = document.getElementById('new-product-name').value.trim();
-  if (!genreId || !code || !name) { showMsg('すべての項目を入力してください', true); return; }
+  if (!genreId || !name) { showMsg('ジャンルと商品名は必須です', true); return; }
   const res = await fetch('../api/master_genre_product.php', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({action: 'add_product', genre_id: genreId, product_code: code, product_name: name}),
@@ -376,7 +376,7 @@ async function confirmEditProduct(btn) {
   const genreId = parseInt(row.querySelector('.e-genre').value);
   const name = row.querySelector('.e-name').value.trim();
   const code = row.querySelector('.e-code').value.trim();
-  if (!name || !code) return;
+  if (!name) return;
   await fetch('../api/master_genre_product.php', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({action: 'update_product', id, genre_id: genreId, product_code: code, product_name: name}),
