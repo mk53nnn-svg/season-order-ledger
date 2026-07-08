@@ -57,5 +57,5 @@ function format_delivery(?string $deliveryType, ?string $deliveryDate): string
         $d = new DateTime($deliveryDate);
         return $d->format('n/j');
     }
-    return $deliveryType;
+    return $deliveryType ?? '';
 }
