@@ -186,7 +186,7 @@ function renderProducts() {
 function renderProductGenreSelect() {
   const select = document.getElementById('new-product-genre');
   const activeGenres = masterData.genres.filter(g => g.is_active == 1);
-  select.innerHTML = activeGenres.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+  select.innerHTML = '<option value="">ジャンルを選択</option>' + activeGenres.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
 }
 
 async function addClient() {
