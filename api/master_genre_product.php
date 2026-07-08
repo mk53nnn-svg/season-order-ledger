@@ -90,7 +90,7 @@ try {
             $genreId = (int)($input['genre_id'] ?? 0);
             $code = trim((string)($input['product_code'] ?? ''));
             $name = trim((string)($input['product_name'] ?? ''));
-            if ($id <= 0 || $genreId <= 0 || $code === '' || $name === '') {
+            if ($id <= 0 || $genreId <= 0 || $name === '') {
                 out(['ok' => false, 'error' => '入力内容が正しくありません。']);
             }
             $stmt = $pdo->prepare("
