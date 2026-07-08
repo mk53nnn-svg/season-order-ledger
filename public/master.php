@@ -80,6 +80,10 @@
 
   <!-- 取引先 -->
   <div class="panel" id="panel-client">
+    <div class="add-row">
+      <input type="text" id="new-client-name" placeholder="取引先名を入力">
+      <button onclick="addClient()">追加する</button>
+    </div>
     <p class="note">取引先名をクリックすると今シーズンの受注一覧を表示します。</p>
     <table>
       <thead><tr><th>取引先名</th><th style="width:160px;"></th></tr></thead>
@@ -179,6 +183,21 @@ function renderProductGenreSelect() {
   const select = document.getElementById('new-product-genre');
   const activeGenres = masterData.genres.filter(g => g.is_active == 1);
   select.innerHTML = activeGenres.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+}
+
+async function addClient() {
+  const name = document.getElementById('new-client-name').value.trim();
+  if (!name) { showMsg('取引先名を入力してください', true); return; }
+  const res = await fetch('../api/update_client.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'add_client', name}),
+  });
+  const result = await res.json();
+  if (result.ok) {
+    document.getElementById('new-client-name').value = '';
+    showMsg('取引先を追加しました');
+    await loadClients();
+  } else { showMsg(result.error || '追加に失敗しました', true); }
 }
 
 async function loadClients() {

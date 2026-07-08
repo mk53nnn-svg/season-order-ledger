@@ -16,6 +16,14 @@ $pdo = get_pdo();
 
 try {
     switch ($action) {
+        case 'add_client':
+            $name = trim((string)($input['name'] ?? ''));
+            if ($name === '') fail5('取引先名が空です。');
+            $stmt = $pdo->prepare("INSERT INTO clients (name) VALUES (:name) ON DUPLICATE KEY UPDATE name = name");
+            $stmt->execute(['name' => $name]);
+            echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
+            break;
+
         case 'update_client':
             $id = (int)($input['id'] ?? 0);
             $name = trim((string)($input['name'] ?? ''));
