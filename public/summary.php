@@ -27,17 +27,31 @@ if (!$selectedSeasonId) {
   .btn-excel { height: 36px; padding: 0 16px; border-radius: 8px; border: 1px solid #2b6cb0; background: #eef5fc; color: #2b6cb0; font-size: 13px; font-weight: 600; cursor: pointer; }
   .alert-banner { display: none; align-items: center; gap: 8px; background: #fdecea; color: #c0392b; border-radius: 8px; padding: 10px 16px; font-size: 13px; margin-bottom: 16px; }
   .alert-banner.show { display: flex; }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 13px; }
-  th { text-align: left; font-size: 11px; font-weight: 600; color: #888; padding: 10px 14px; border-bottom: 1px solid #eee; white-space: nowrap; }
-  td { padding: 11px 14px; border-bottom: 1px solid #eee; vertical-align: middle; }
+
+  /* ジャンルグループ */
+  .genre-group { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 10px; }
+  .genre-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #eee; user-select: none; }
+  .genre-header:hover { background: #fafafa; }
+  .genre-header-left { display: flex; align-items: center; gap: 10px; }
+  .genre-name { font-size: 14px; font-weight: 600; color: #222; }
+  .genre-badge { font-size: 11px; color: #888; background: #f0f0f0; padding: 2px 8px; border-radius: 999px; }
+  .genre-badge.has-needed { background: #fdecea; color: #c0392b; font-weight: 600; }
+  .genre-chevron { font-size: 12px; color: #888; transition: transform 0.2s; }
+  .genre-chevron.open { transform: rotate(180deg); }
+  .genre-body { display: none; }
+  .genre-body.open { display: block; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; font-weight: 600; color: #888; padding: 8px 14px; border-bottom: 1px solid #eee; white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 1px solid #eee; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
   tr.urgent td { background: #fdecea; }
   tr:not(.urgent):hover td { background: #fafafa; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
   .stock-num { font-weight: 700; }
   .stock-minus { color: #c0392b; }
   .stock-plus { color: #222; }
-  .genre-tag { font-size: 11px; color: #888; background: #f0f0f0; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
-  .action-btn { font-size: 12px; padding: 5px 12px; border-radius: 999px; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .action-btn { font-size: 12px; padding: 5px 12px; border-radius: 999px; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; pointer-events: none; }
   .btn-done { background: #e6f4ea; color: #1e7e34; }
   .btn-needed { background: #c0392b; color: #fff; }
   .product-cell { display: flex; flex-direction: column; gap: 3px; cursor: pointer; }
@@ -49,9 +63,11 @@ if (!$selectedSeasonId) {
   .loading { padding: 40px; text-align: center; color: #999; }
   .copy-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: #222; color: #fff; font-size: 12px; padding: 8px 16px; border-radius: 8px; opacity: 0; transition: all 0.2s; pointer-events: none; z-index: 100; }
   .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .expand-all-btn { font-size: 12px; color: #888; border: 1px solid #ddd; background: #fff; border-radius: 8px; padding: 5px 12px; cursor: pointer; }
 </style>
 </head>
 <body>
+<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #eee;"><a href="index.php" style="font-size:12px;color:#888;text-decoration:none;">&laquo; ホーム</a></div>
 <div class="page">
   <div class="topbar">
     <h1>商品別 受注集計</h1>
@@ -67,6 +83,7 @@ if (!$selectedSeasonId) {
         <option value="all">すべて表示</option>
         <option value="needed">未発注のみ</option>
       </select>
+      <button class="expand-all-btn" id="expand-all-btn" onclick="toggleAllGenres()">すべて展開</button>
       <button class="btn-excel" id="excel-btn">Excel出力</button>
     </div>
   </div>
@@ -75,21 +92,9 @@ if (!$selectedSeasonId) {
     <span id="alert-text"></span>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th style="width:130px;">ジャンル</th>
-        <th>商品名 ／ コード</th>
-        <th class="num" style="width:100px;">受注数</th>
-        <th class="num" style="width:100px;">発注数</th>
-        <th class="num" style="width:90px;">在庫</th>
-        <th style="width:110px;">状態</th>
-      </tr>
-    </thead>
-    <tbody id="summary-tbody">
-      <tr><td colspan="6" class="loading">読み込み中...</td></tr>
-    </tbody>
-  </table>
+  <div id="summary-container">
+    <div class="loading">読み込み中...</div>
+  </div>
 </div>
 
 <div class="copy-toast" id="copy-toast">コードをコピーしました</div>
@@ -97,72 +102,123 @@ if (!$selectedSeasonId) {
 <script>
 const seasonSelect = document.getElementById('season-select');
 const filterSelect = document.getElementById('filter-select');
-const tbody = document.getElementById('summary-tbody');
+const container = document.getElementById('summary-container');
 const alertBanner = document.getElementById('alert-banner');
 const alertText = document.getElementById('alert-text');
+let allExpanded = false;
 
 async function loadSummary() {
   const seasonId = seasonSelect.value;
-  tbody.innerHTML = '<tr><td colspan="6" class="loading">読み込み中...</td></tr>';
+  container.innerHTML = '<div class="loading">読み込み中...</div>';
 
   try {
     const res = await fetch(`../api/get_summary.php?season_id=${seasonId}`);
     const result = await res.json();
     if (!result.ok) {
-      tbody.innerHTML = `<tr><td colspan="6" class="loading">読み込みに失敗しました</td></tr>`;
+      container.innerHTML = '<div class="loading">読み込みに失敗しました</div>';
       return;
     }
-    renderTable(result.data);
+    renderGroups(result.data);
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="6" class="loading">通信エラーが発生しました</td></tr>`;
+    container.innerHTML = '<div class="loading">通信エラーが発生しました</div>';
   }
 }
 
-function renderTable(data) {
+function renderGroups(data) {
   const filter = filterSelect.value;
   const filtered = filter === 'needed' ? data.filter(d => d.status === 'needed') : data;
 
   const neededCount = data.filter(d => d.status === 'needed').length;
   if (neededCount > 0) {
     alertBanner.classList.add('show');
-    alertText.textContent = `${neededCount}件 在庫不足で未発注の商品があります。発注漏れに注意してください（行の並び順は固定です）`;
+    alertText.textContent = `${neededCount}件 在庫不足で未発注の商品があります。`;
   } else {
     alertBanner.classList.remove('show');
   }
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="loading">対象データがありません</td></tr>';
+    container.innerHTML = '<div class="loading">対象データがありません</div>';
     return;
   }
 
-  tbody.innerHTML = filtered.map(row => {
-    const isUrgent = row.status === 'needed';
-    const stockClass = row.stock < 0 ? 'stock-minus' : 'stock-plus';
-    const stockDisplay = row.stock;
-    const statusBtn = isUrgent
-      ? `<button class="action-btn btn-needed">未発注</button>`
-      : `<button class="action-btn btn-done">発注済</button>`;
+  // ジャンルごとにグループ化
+  const groups = {};
+  filtered.forEach(row => {
+    if (!groups[row.genre_name]) groups[row.genre_name] = [];
+    groups[row.genre_name].push(row);
+  });
+
+  container.innerHTML = Object.entries(groups).map(([genreName, rows]) => {
+    const hasNeeded = rows.some(r => r.status === 'needed');
+    const neededInGenre = rows.filter(r => r.status === 'needed').length;
+    const badgeClass = hasNeeded ? 'genre-badge has-needed' : 'genre-badge';
+    const badgeText = hasNeeded ? `未発注 ${neededInGenre}件` : `${rows.length}商品`;
+
+    const tableRows = rows.map(row => {
+      const isUrgent = row.status === 'needed';
+      const stockClass = row.stock < 0 ? 'stock-minus' : 'stock-plus';
+      const statusBtn = isUrgent
+        ? `<button class="action-btn btn-needed">未発注</button>`
+        : `<button class="action-btn btn-done">発注済</button>`;
+
+      return `
+        <tr class="${isUrgent ? 'urgent' : ''}">
+          <td>
+            <div class="product-cell" onclick="goDetail(${row.product_id})">
+              <div class="product-name-row">
+                <span class="product-name">${escapeHtml(row.product_name)}</span>
+                <span class="code-chip" onclick="copyCode(event, '${row.product_code}', this)">
+                  ${escapeHtml(row.product_code)}
+                </span>
+              </div>
+            </div>
+          </td>
+          <td class="num">${row.order_qty_sum}</td>
+          <td class="num">${row.po_qty_sum}</td>
+          <td class="num stock-num ${stockClass}">${row.stock}</td>
+          <td>${statusBtn}</td>
+        </tr>`;
+    }).join('');
 
     return `
-      <tr class="${isUrgent ? 'urgent' : ''}">
-        <td><span class="genre-tag">${escapeHtml(row.genre_name)}</span></td>
-        <td>
-          <div class="product-cell" onclick="goDetail(${row.product_id})">
-            <div class="product-name-row">
-              <span class="product-name">${escapeHtml(row.product_name)}</span>
-              <span class="code-chip" onclick="copyCode(event, '${row.product_code}', this)">
-                ${escapeHtml(row.product_code)}
-              </span>
-            </div>
+      <div class="genre-group">
+        <div class="genre-header" onclick="toggleGenre(this)">
+          <div class="genre-header-left">
+            <span class="genre-name">${escapeHtml(genreName)}</span>
+            <span class="${badgeClass}">${badgeText}</span>
           </div>
-        </td>
-        <td class="num">${row.order_qty_sum}</td>
-        <td class="num">${row.po_qty_sum}</td>
-        <td class="num stock-num ${stockClass}">${stockDisplay}</td>
-        <td>${statusBtn}</td>
-      </tr>
-    `;
+          <span class="genre-chevron">▼</span>
+        </div>
+        <div class="genre-body">
+          <table>
+            <thead>
+              <tr>
+                <th>商品名 ／ コード</th>
+                <th class="num" style="width:90px;">受注数</th>
+                <th class="num" style="width:90px;">発注数</th>
+                <th class="num" style="width:80px;">在庫</th>
+                <th style="width:100px;">状態</th>
+              </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </div>
+      </div>`;
   }).join('');
+}
+
+function toggleGenre(header) {
+  const chevron = header.querySelector('.genre-chevron');
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+
+function toggleAllGenres() {
+  allExpanded = !allExpanded;
+  document.querySelectorAll('.genre-body').forEach(b => b.classList.toggle('open', allExpanded));
+  document.querySelectorAll('.genre-chevron').forEach(c => c.classList.toggle('open', allExpanded));
+  document.getElementById('expand-all-btn').textContent = allExpanded ? 'すべて折りたたむ' : 'すべて展開';
 }
 
 function escapeHtml(str) {
