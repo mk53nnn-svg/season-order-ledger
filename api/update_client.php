@@ -40,6 +40,15 @@ try {
             echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
             break;
 
+        case 'reorder_clients':
+            $ids = $input['ids'] ?? [];
+            $stmt = $pdo->prepare("UPDATE clients SET display_order = :order WHERE id = :id");
+            foreach ($ids as $i => $id) {
+                $stmt->execute(['order' => $i + 1, 'id' => (int)$id]);
+            }
+            echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
+            break;
+
         case 'delete_client':
             $id = (int)($input['id'] ?? 0);
             if ($id <= 0) fail5('IDが不正です。');

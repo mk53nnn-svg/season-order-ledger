@@ -29,6 +29,10 @@
   input.inline-edit { height: 30px; border-radius: 6px; border: 1px solid #ccc; padding: 0 8px; font-size: 13px; width: 100%; }
   select.inline-edit { height: 30px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; width: 100%; }
   .note { font-size: 12px; color: #999; margin-bottom: 12px; }
+  .drag-handle { cursor: grab; color: #ccc; font-size: 16px; padding: 0 6px; user-select: none; }
+  .drag-handle:active { cursor: grabbing; }
+  tr.dragging { opacity: 0.4; }
+  tr.drag-over { border-top: 2px solid #2b6cb0; }
   .msg { margin-top: 12px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
   .msg.success { background: #e6f4ea; color: #1e7e34; display: block; }
   .msg.error { background: #fdecea; color: #c0392b; display: block; }
@@ -59,7 +63,7 @@
       <button onclick="addGenre()">追加する</button>
     </div>
     <table>
-      <thead><tr><th>表示順</th><th>ジャンル名</th><th style="width:140px;"></th></tr></thead>
+      <thead><tr><th style="width:30px;"></th><th>ジャンル名</th><th style="width:140px;"></th></tr></thead>
       <tbody id="genre-tbody"></tbody>
     </table>
   </div>
@@ -86,7 +90,7 @@
     </div>
     <p class="note">取引先名をクリックすると今シーズンの受注一覧を表示します。</p>
     <table>
-      <thead><tr><th>取引先名</th><th style="width:160px;"></th></tr></thead>
+      <thead><tr><th style="width:30px;"></th><th>取引先名</th><th style="width:160px;"></th></tr></thead>
       <tbody id="client-tbody"></tbody>
     </table>
   </div>
@@ -154,8 +158,8 @@ function renderGenres() {
   const tbody = document.getElementById('genre-tbody');
   const activeGenres = masterData.genres.filter(g => g.is_active == 1);
   tbody.innerHTML = activeGenres.map(g => `
-    <tr data-id="${g.id}">
-      <td>${g.display_order}</td>
+    <tr data-id="${g.id}" draggable="true">
+      <td><span class="drag-handle">&#9776;</span></td>
       <td class="td-name">${escapeHtml(g.name)}</td>
       <td><div class="row-actions">
         <button class="btn-mini btn-edit" onclick="editGenre(this)">編集</button>
@@ -209,7 +213,8 @@ async function loadClients() {
     return;
   }
   tbody.innerHTML = result.clients.map(c => `
-    <tr data-id="${c.id}" data-name="${escapeHtml(c.name)}">
+    <tr data-id="${c.id}" data-name="${escapeHtml(c.name)}" draggable="true">
+      <td><span class="drag-handle">&#9776;</span></td>
       <td><span class="client-name-link" onclick="showClientOrders('${escapeHtml(c.name)}')">${escapeHtml(c.name)}</span></td>
       <td><div class="row-actions">
         <button class="btn-mini btn-edit" onclick="editClient(this)">編集</button>
@@ -480,14 +485,65 @@ async function deleteSeason(id, name) {
   else { showMsg(result.error || '削除に失敗しました', true); }
 }
 
+function initDragAndDrop(tbodyId, saveAction, apiUrl) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  let dragSrc = null;
+
+  tbody.addEventListener('dragstart', e => {
+    dragSrc = e.target.closest('tr');
+    if (!dragSrc) return;
+    dragSrc.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  tbody.addEventListener('dragover', e => {
+    e.preventDefault();
+    const target = e.target.closest('tr');
+    if (!target || target === dragSrc) return;
+    document.querySelectorAll(`#${tbodyId} tr`).forEach(r => r.classList.remove('drag-over'));
+    target.classList.add('drag-over');
+    e.dataTransfer.dropEffect = 'move';
+  });
+  tbody.addEventListener('dragleave', e => {
+    const target = e.target.closest('tr');
+    if (target) target.classList.remove('drag-over');
+  });
+  tbody.addEventListener('drop', async e => {
+    e.preventDefault();
+    const target = e.target.closest('tr');
+    if (!target || target === dragSrc) return;
+    document.querySelectorAll(`#${tbodyId} tr`).forEach(r => r.classList.remove('drag-over'));
+    dragSrc.classList.remove('dragging');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const srcIdx = rows.indexOf(dragSrc);
+    const tgtIdx = rows.indexOf(target);
+    if (srcIdx < tgtIdx) {
+      target.after(dragSrc);
+    } else {
+      target.before(dragSrc);
+    }
+    const ids = Array.from(tbody.querySelectorAll('tr')).map(r => parseInt(r.dataset.id)).filter(Boolean);
+    await fetch(apiUrl, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: saveAction, ids}),
+    });
+  });
+  tbody.addEventListener('dragend', e => {
+    document.querySelectorAll(`#${tbodyId} tr`).forEach(r => {
+      r.classList.remove('dragging');
+      r.classList.remove('drag-over');
+    });
+  });
+}
+
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
 
-loadMaster();
-loadClients();
+loadMaster().then(() => initDragAndDrop('genre-tbody', 'reorder_genres', '../api/master_genre_product.php'));
+loadClients().then(() => initDragAndDrop('client-tbody', 'reorder_clients', '../api/update_client.php'));
 loadSeasons();
 </script>
 </body>
