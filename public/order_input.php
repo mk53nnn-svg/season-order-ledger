@@ -53,7 +53,7 @@ $clients = $clientsStmt->fetchAll();
 
   /* カスタムドロップダウン */
   .custom-select { position: relative; width: 100%; }
-  .custom-select-trigger { height: 36px; border-radius: 8px; border: 1px solid #ccc; padding: 0 10px; font-size: 13px; background: #fafafa; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+  .custom-select-trigger { height: 38px; border-radius: 8px; border: 1px solid #ccc; padding: 0 10px; font-size: 14px; color: #222; background: #fafafa; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
   .custom-select-trigger:hover { border-color: #4a90d9; }
   .custom-select-trigger.open { border-color: #4a90d9; background: #fff; }
   .custom-select-trigger .arrow { font-size: 10px; color: #888; }
