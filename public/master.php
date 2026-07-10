@@ -221,7 +221,6 @@ function renderProducts() {
         <div class="product-genre-header" onclick="toggleProductGenre(this)">
           <div class="product-genre-title">
             <span>${escapeHtml(g.name)}</span>
-            <span class="genre-badge">${products.length}商品</span>
           </div>
           <span class="product-genre-chevron">▼</span>
         </div>
