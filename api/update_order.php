@@ -18,10 +18,10 @@ $deliveryType = (string)($input['delivery_type'] ?? '');
 $deliveryDate = $input['delivery_date'] ?? null;
 $quantity = (int)($input['quantity'] ?? 0);
 
-$validDeliveryTypes = ['date', '即納', '初旬', '中旬', '下旬'];
+// 納期タイプは空・date・即納・月+時期の形式を許可
+$validDeliveryTypes = null; // バリデーションはPHP側では行わない
 
-if ($orderId <= 0 || $clientName === '' || $orderDate === '' || $quantity <= 0
-    || !in_array($deliveryType, $validDeliveryTypes, true)) {
+if ($orderId <= 0 || $clientName === '' || $orderDate === '' || $quantity <= 0) {
     fail3('入力内容が正しくありません。');
 }
 
