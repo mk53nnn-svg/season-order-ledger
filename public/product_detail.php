@@ -108,12 +108,12 @@ function render() {
   const poRows = d.purchase_orders.length === 0
     ? '<tr><td colspan="4" style="color:#999;">発注履歴はまだありません</td></tr>'
     : d.purchase_orders.map(po => `
-        <tr data-po-id="${po.id}">
-          <td class="po-date">${po.order_date}</td>
+        <tr data-po-id="${po.id}" ${po.is_tanoroshi ? 'style="background:#f0f5ff;"' : ''}>
+          <td class="po-date">${po.is_tanoroshi ? '<span style="font-size:11px;color:#2b6cb0;font-weight:600;">棚卸在庫</span>' : po.order_date}</td>
           <td class="num po-qty">${po.quantity}</td>
           <td colspan="2">
             <div class="row-actions">
-              <button class="edit-btn" onclick="startEditPo(this, ${po.id})">編集</button>
+              <button class="edit-btn" onclick="startEditPo(this, ${po.id}, ${po.is_tanoroshi})">編集</button>
               <button class="delete-btn" onclick="deletePo(${po.id})">削除</button>
             </div>
           </td>
@@ -122,7 +122,7 @@ function render() {
 
   content.innerHTML = `
     <div class="header">
-      <h1>${escapeHtml(d.product.product_name)} <span class="code">${escapeHtml(d.product.product_code)}</span></h1>
+      <h1>${escapeHtml(d.product.product_name)} <span class="code">${escapeHtml(d.product.product_code)}</span>${d.product.unit_quantity ? `<span style="font-size:12px;color:#888;font-weight:400;">${escapeHtml(d.product.unit_quantity)}</span>` : ''}</h1>
       <span class="genre-tag">${escapeHtml(d.product.genre_name)}</span>
     </div>
 
@@ -139,15 +139,6 @@ function render() {
         <thead><tr><th>発注日</th><th class="num">発注数</th><th colspan="2"></th></tr></thead>
         <tbody id="po-tbody">${poRows}</tbody>
       </table>
-    </div>
-
-    <div class="stock-panel">
-      <div class="stock-panel-title">シーズン開始時在庫（個別調整）</div>
-      <div class="stock-row">
-        <input type="number" id="initial-stock-input" min="0" value="${d.initial_stock}">
-        <button class="btn-mini-save" onclick="saveInitialStock()">保存</button>
-        <span class="saved-msg" id="stock-saved-msg">保存しました</span>
-      </div>
     </div>
 
     <div class="order-panel">
@@ -205,17 +196,7 @@ function togglePoHistory() {
   document.getElementById('po-history').classList.toggle('show');
 }
 
-async function saveInitialStock() {
-  const qty = parseInt(document.getElementById('initial-stock-input').value) || 0;
-  await fetch('../api/save_initial_stocks.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ season_id: SEASON_ID, stocks: [{ product_id: PRODUCT_ID, quantity: qty }] }),
-  });
-  document.getElementById('stock-saved-msg').classList.add('show');
-  setTimeout(() => document.getElementById('stock-saved-msg').classList.remove('show'), 1500);
-  await loadDetail();
-}
+
 
 async function savePurchaseOrder() {
   const qty = parseInt(document.getElementById('po-qty-input').value) || 0;
@@ -231,12 +212,14 @@ async function savePurchaseOrder() {
   await loadDetail();
 }
 
-function startEditPo(btn, poId) {
+function startEditPo(btn, poId, isTanoroshi) {
   const row = btn.closest('tr');
-  const date = row.querySelector('.po-date').textContent;
+  const date = isTanoroshi ? '' : row.querySelector('.po-date').textContent;
   const qty = row.querySelector('.po-qty').textContent;
   row.classList.add('edit-row');
-  row.querySelector('.po-date').innerHTML = `<input type="date" class="e-po-date" value="${date}">`;
+  row.querySelector('.po-date').innerHTML = isTanoroshi
+    ? '<span style="font-size:11px;color:#2b6cb0;font-weight:600;">棚卸在庫</span>'
+    : `<input type="date" class="e-po-date" value="${date}">`;
   row.querySelector('.po-qty').innerHTML = `<input type="number" class="e-po-qty" value="${qty}" style="text-align:right;">`;
   row.cells[2].colSpan = 1;
   row.cells[2].innerHTML = `<div class="edit-actions">

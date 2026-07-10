@@ -15,7 +15,7 @@ $pdo = get_pdo();
 
 // 商品基本情報
 $stmt = $pdo->prepare("
-  SELECT p.id AS product_id, p.product_code, p.product_name, g.name AS genre_name
+  SELECT p.id AS product_id, p.product_code, p.unit_quantity, p.product_name, g.name AS genre_name
   FROM products p INNER JOIN genres g ON g.id = p.genre_id
   WHERE p.id = :product_id
 ");

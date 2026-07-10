@@ -15,6 +15,7 @@ $sql = "
   SELECT
     p.id            AS product_id,
     p.product_code,
+    p.unit_quantity,
     p.product_name,
     p.display_order AS product_order,
     g.id            AS genre_id,
@@ -53,6 +54,7 @@ $result = array_map(function ($row) {
     return [
         'product_id' => (int)$row['product_id'],
         'product_code' => $row['product_code'],
+        'unit_quantity' => $row['unit_quantity'],
         'product_name' => $row['product_name'],
         'genre_name' => $row['genre_name'],
         'order_count' => (int)$row['order_count'],

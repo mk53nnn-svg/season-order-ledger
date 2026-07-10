@@ -168,9 +168,10 @@ function renderGroups(data) {
             <div class="product-cell" onclick="goDetail(${row.product_id})">
               <div class="product-name-row">
                 <span class="product-name">${escapeHtml(row.product_name)}</span>
-                <span class="code-chip" onclick="copyCode(event, '${row.product_code}', this)">
+              <span class="code-chip" onclick="copyCode(event, '${row.product_code}', this)">
                   ${escapeHtml(row.product_code)}
                 </span>
+              ${row.unit_quantity ? `<span style="font-size:11px;color:#888;">${escapeHtml(row.unit_quantity)}</span>` : ''}
               </div>
             </div>
           </td>
