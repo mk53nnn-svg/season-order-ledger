@@ -176,7 +176,7 @@ function renderGenres() {
       <td><span class="drag-handle">&#9776;</span></td>
       <td class="td-name">${escapeHtml(g.name)}</td>
       <td><div class="row-actions">
-          <button class="btn-mini btn-delete product-delete-btn" onclick="deleteProduct(${p.id})">削除</button>
+          <button class="btn-mini btn-delete" onclick="deleteGenre(${g.id})">削除</button>
         </div></td>
     </tr>`).join('');
 }
