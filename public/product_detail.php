@@ -122,7 +122,7 @@ function render() {
 
   content.innerHTML = `
     <div class="header">
-      <h1>${escapeHtml(d.product.product_name)} <span class="code">${escapeHtml(d.product.product_code)}</span>${d.product.unit_quantity ? `<span style="font-size:12px;color:#888;font-weight:400;">${escapeHtml(d.product.unit_quantity)}</span>` : ''}</h1>
+      <h1>${escapeHtml(d.product.product_name)} <span class="code">${escapeHtml(d.product.product_code)}</span>${d.product.unit_quantity ? `<span style="font-size:12px;color:#2b6cb0;font-weight:400;">入数：${escapeHtml(d.product.unit_quantity)}</span>` : ''}</h1>
       <span class="genre-tag">${escapeHtml(d.product.genre_name)}</span>
     </div>
 

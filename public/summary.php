@@ -171,7 +171,7 @@ function renderGroups(data) {
               <span class="code-chip" onclick="copyCode(event, '${row.product_code}', this)">
                   ${escapeHtml(row.product_code)}
                 </span>
-              ${row.unit_quantity ? `<span style="font-size:11px;color:#888;">${escapeHtml(row.unit_quantity)}</span>` : ''}
+              ${row.unit_quantity ? `<span style="font-size:11px;color:#2b6cb0;">入数：${escapeHtml(row.unit_quantity)}</span>` : ''}
               </div>
             </div>
           </td>

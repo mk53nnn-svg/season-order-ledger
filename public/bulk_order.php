@@ -140,7 +140,7 @@ function renderTable(data) {
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="product-name">${escapeHtml(row.product_name)}</span>
               ${row.product_code ? `<span class="code-chip" onclick="copyCode('${row.product_code}', this)" style="cursor:pointer;" title="クリックでコピー">${escapeHtml(row.product_code)}</span>` : ''}
-              ${row.unit_quantity ? `<span style="font-size:11px;color:#888;">${escapeHtml(row.unit_quantity)}</span>` : ''}
+              ${row.unit_quantity ? `<span style="font-size:11px;color:#2b6cb0;">入数：${escapeHtml(row.unit_quantity)}</span>` : ''}
             </div>
           </td>
           <td class="num">${row.order_qty_sum}</td>
