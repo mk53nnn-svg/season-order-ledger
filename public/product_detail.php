@@ -93,11 +93,12 @@ if ($productId <= 0 || $seasonId <= 0) {
     .stock-row { flex-wrap: wrap; }
     .order-panel { display: none; }
     .stock-panel { display: none; }
+    .home-link { display: none; }
   }
 </style>
 </head>
 <body>
-<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #eee;"><a href="index.php" style="font-size:12px;color:#888;text-decoration:none;">&laquo; ホーム</a></div>
+<div class="home-link" style="padding:8px 16px;background:#fff;border-bottom:1px solid #eee;"><a href="index.php" style="font-size:12px;color:#888;text-decoration:none;">&laquo; ホーム</a></div>
 <div class="page" id="page-root">
   <div class="breadcrumb" onclick="goBack()">← 商品別受注集計に戻る</div>
   <div class="loading" id="loading">読み込み中...</div>
