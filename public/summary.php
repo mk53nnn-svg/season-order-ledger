@@ -88,11 +88,14 @@ if (!$selectedSeasonId) {
     .col-po-qty { display: none; }
     .col-order-qty-th { display: none; }
     .col-po-qty-th { display: none; }
+    .btn-excel { display: none; }
+    .bulk-order-btn { display: none; }
+    .home-link { display: none; }
   }
 </style>
 </head>
 <body>
-<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #eee;"><a href="index.php" style="font-size:12px;color:#888;text-decoration:none;">&laquo; ホーム</a></div>
+<div class="home-link" style="padding:8px 16px;background:#fff;border-bottom:1px solid #eee;"><a href="index.php" style="font-size:12px;color:#888;text-decoration:none;">&laquo; ホーム</a></div>
 <div class="page">
   <div class="topbar">
     <h1>商品別 受注集計</h1>
@@ -109,7 +112,7 @@ if (!$selectedSeasonId) {
         <option value="needed">未発注のみ</option>
       </select>
       <button class="expand-all-btn" id="expand-all-btn" onclick="toggleAllGenres()">すべて展開</button>
-      <button class="expand-all-btn" onclick="window.location.href='bulk_order.php?season_id='+seasonSelect.value" style="color:#2b6cb0;border-color:#2b6cb0;background:#eef5fc;">一括発注</button>
+      <button class="expand-all-btn bulk-order-btn" onclick="window.location.href='bulk_order.php?season_id='+seasonSelect.value" style="color:#2b6cb0;border-color:#2b6cb0;background:#eef5fc;">一括発注</button>
       <button class="btn-excel" id="excel-btn">Excel出力</button>
     </div>
   </div>
