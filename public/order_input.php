@@ -60,7 +60,7 @@ $clients = $clientsStmt->fetchAll();
   .custom-select-trigger:hover { border-color: #4a90d9; }
   .custom-select-trigger.open { border-color: #4a90d9; background: #fff; }
   .custom-select-trigger .arrow { font-size: 10px; color: #888; }
-  .custom-select-dropdown { position: fixed; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 9999; max-height: 240px; overflow-y: auto; display: none; width: 200px; }
+  .custom-select-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 9999; max-height: 240px; overflow-y: auto; display: none; }
   .custom-select-dropdown.open { display: block; }
   .custom-select-option { padding: 8px 12px; font-size: 14px; color: #222; cursor: pointer; }
   .custom-select-option:hover { background: #f0f5ff; }
@@ -235,19 +235,8 @@ function createCustomSelect(options, placeholder, onChange) {
       d.previousElementSibling.classList.remove('open');
     });
     if (!isOpen) {
-      // 一旦表示してから位置を計算
       dropdown.classList.add('open');
       trigger.classList.add('open');
-      const rect = trigger.getBoundingClientRect();
-      const dropHeight = dropdown.offsetHeight;
-      const spaceBelow = window.innerHeight - rect.bottom;
-      // 下に十分なスペースがあれば下に、なければ上に表示
-      if (spaceBelow > dropHeight || spaceBelow > 150) {
-        dropdown.style.top = (rect.bottom + 4) + 'px';
-      } else {
-        dropdown.style.top = (rect.top - dropHeight - 4) + 'px';
-      }
-      dropdown.style.left = rect.left + 'px';
     }
   });
 
