@@ -153,7 +153,7 @@ $clients = $clientsStmt->fetchAll();
       <button id="btn-register-and-kicho" style="flex:1;height:40px;border-radius:8px;border:none;background:#222;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">登録して記帳</button>
       <button id="btn-kicho-only" style="flex:1;height:40px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#555;font-size:13px;cursor:pointer;">登録せずに記帳</button>
     </div>
-    <button onclick="document.getElementById('unregistered-modal').style.display='none';" style="width:100%;margin-top:10px;height:36px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#999;font-size:13px;cursor:pointer;">キャンセル</button>
+    <button id="btn-cancel-modal" style="width:100%;margin-top:10px;height:36px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#999;font-size:13px;cursor:pointer;">キャンセル</button>
   </div>
 </div>
 
@@ -452,9 +452,6 @@ document.getElementById('order-form').addEventListener('submit', async (e) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'add_client', name: clientName }),
       });
-    }
-  }`「${clientName}」は取引先マスタに未登録です。\nこのまま受注登録しますか？\n（取引先マスタへの登録は行われません）`)) {
-      return;
     }
   }
 
