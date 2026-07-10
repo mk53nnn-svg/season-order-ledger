@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -14,6 +14,7 @@ if ($productId <= 0 || $seasonId <= 0) {
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="common.css">
 <title>商品詳細 - シーズン受注台帳</title>
 <style>
@@ -67,6 +68,30 @@ if ($productId <= 0 || $seasonId <= 0) {
   .btn-mini-cancel { background: #fff; border: 1px solid #ccc; color: #888; }
   .loading { padding: 30px; text-align: center; color: #999; }
   .row-actions { display: flex; gap: 6px; }
+
+  @media (max-width: 600px) {
+    .page { padding: 12px 8px; }
+    .header { flex-direction: column; gap: 6px; }
+    .header h1 { font-size: 16px; }
+    .stat-cards { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .card { padding: 10px 8px; }
+    .card .value { font-size: 18px; }
+    .card .label { font-size: 10px; }
+    .order-panel { padding: 12px; }
+    .order-row { flex-direction: column; gap: 8px; }
+    .field input { font-size: 16px; }
+    .btn-save { width: 100%; height: 44px; font-size: 15px; }
+    .po-history table { font-size: 12px; }
+    .section-title { font-size: 14px; margin-top: 14px; }
+    table.main-table { font-size: 12px; }
+    table.main-table th { padding: 6px 8px; font-size: 10px; }
+    table.main-table td { padding: 8px 8px; }
+    .edit-btn { font-size: 11px; padding: 3px 7px; }
+    .delete-btn { font-size: 11px; padding: 3px 7px; }
+    .breadcrumb { font-size: 13px; margin-bottom: 8px; }
+    .stock-panel { padding: 12px; }
+    .stock-row { flex-wrap: wrap; }
+  }
 </style>
 </head>
 <body>
