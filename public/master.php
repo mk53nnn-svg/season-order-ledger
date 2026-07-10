@@ -415,8 +415,19 @@ async function addProduct() {
 
 function editProduct(btn) {
   // 他の編集中の行をキャンセルして元に戻す
-  document.querySelectorAll('.btn-cancel').forEach(b => {
-    if (b.textContent === '取消') b.click();
+  // 編集中の行を元に戻す（loadMasterを呼ばずにDOMで直接処理）
+  document.querySelectorAll('tr').forEach(r => {
+    if (!r.querySelector('.e-name')) return;
+    const nameInput = r.querySelector('.e-name');
+    const codeInput = r.querySelector('.e-code');
+    const unitInput = r.querySelector('.e-unit');
+    if (nameInput) r.querySelector('.td-name').innerHTML = escapeHtml(nameInput.value || nameInput.defaultValue);
+    if (codeInput) r.querySelector('.td-code').innerHTML = escapeHtml(codeInput.value || codeInput.defaultValue);
+    if (unitInput) r.querySelector('.td-unit').innerHTML = escapeHtml(unitInput.value || unitInput.defaultValue);
+    if (r.cells[4]) r.cells[4].innerHTML = `<div class="row-actions">
+      <button class="btn-mini btn-edit" onclick="editProduct(this)">編集</button>
+      <button class="btn-mini btn-delete" onclick="deleteProduct(${r.dataset.id})">削除</button>
+    </div>`;
   });
 
   const row = btn.closest('tr');
