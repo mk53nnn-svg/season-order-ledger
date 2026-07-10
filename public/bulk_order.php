@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -15,6 +15,7 @@ if (!$selectedSeasonId) {
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="common.css">
 <title>一括発注入力 - シーズン受注台帳</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }

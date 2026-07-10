@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -14,6 +14,7 @@ if ($productId <= 0 || $seasonId <= 0) {
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="common.css">
 <title>商品詳細 - シーズン受注台帳</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }

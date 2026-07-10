@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="common.css">
 <title>マスタ管理 - シーズン受注台帳</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
