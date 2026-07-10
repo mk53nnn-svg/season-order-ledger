@@ -94,6 +94,11 @@ if ($productId <= 0 || $seasonId <= 0) {
     .order-panel { display: none; }
     .stock-panel { display: none; }
     .home-link { display: none; }
+    .edit-btn { display: none; }
+    .delete-btn { display: none; }
+    .po-history .edit-btn { display: none; }
+    .po-history .delete-btn { display: none; }
+    .row-actions { display: none; }
   }
 </style>
 </head>
@@ -255,7 +260,7 @@ async function savePurchaseOrder() {
   const date = document.getElementById('po-date-input').value;
   const staffSelect = document.getElementById('po-staff-select');
   const staffInput = document.getElementById('po-staff-input');
-  const staffName = staffSelect && staffSelect.value ? staffSelect.value : (staffInput ? staffInput.value.trim() : '');
+  const staffName = (staffInput && staffInput.value.trim()) ? staffInput.value.trim() : (staffSelect ? staffSelect.value : '');
   if (qty <= 0 || !date) return;
 
   // 自由入力した場合はマスタに追加
