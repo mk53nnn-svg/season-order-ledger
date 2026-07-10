@@ -235,13 +235,20 @@ function createCustomSelect(options, placeholder, onChange) {
       d.previousElementSibling.classList.remove('open');
     });
     if (!isOpen) {
-      // トリガーの位置を取得してドロップダウンを配置
-      const rect = trigger.getBoundingClientRect();
-      dropdown.style.top = (rect.bottom + 4) + 'px';
-      dropdown.style.left = rect.left + 'px';
-      dropdown.style.width = rect.width + 'px';
+      // 一旦表示してから位置を計算
       dropdown.classList.add('open');
       trigger.classList.add('open');
+      const rect = trigger.getBoundingClientRect();
+      const dropHeight = dropdown.offsetHeight;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // 下に十分なスペースがあれば下に、なければ上に表示
+      if (spaceBelow > dropHeight || spaceBelow > 150) {
+        dropdown.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+      } else {
+        dropdown.style.top = (rect.top + window.scrollY - dropHeight - 4) + 'px';
+      }
+      dropdown.style.left = (rect.left + window.scrollX) + 'px';
+      dropdown.style.width = rect.width + 'px';
     }
   });
 
