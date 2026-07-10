@@ -140,6 +140,7 @@ async function loadDetail() {
   }
   currentData = result;
   render();
+  return true;
 }
 
 function render() {
@@ -394,8 +395,7 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-loadDetail();
-loadStaff();
+loadDetail().then(() => loadStaff());
 </script>
 </body>
 </html>
