@@ -342,14 +342,19 @@ function startEdit(btn) {
   row.classList.add('edit-row');
   row.querySelector('.td-date').innerHTML = `<input type="date" class="e-date" value="${date}">`;
   row.querySelector('.td-client').innerHTML = `<input type="text" class="e-client" value="${client}">`;
+  const months = ['11','12','1','2','3','4'];
+  const periods = ['初旬','中旬','下旬'];
+  const monthOptions = months.map(m => {
+    const vals = periods.map(p => `${m}月${p}`);
+    return vals.map(v => `<option value="${v}" ${deliveryType===v?'selected':''}>${v}</option>`).join('');
+  }).join('');
+
   row.querySelector('.td-deadline').innerHTML = `
     <select class="e-delivery-type">
       <option value="">納期なし</option>
       <option value="date" ${deliveryType==='date'?'selected':''}>日付指定</option>
       <option value="即納" ${deliveryType==='即納'?'selected':''}>即納</option>
-      <option value="初旬" ${deliveryType==='初旬'?'selected':''}>初旬</option>
-      <option value="中旬" ${deliveryType==='中旬'?'selected':''}>中旬</option>
-      <option value="下旬" ${deliveryType==='下旬'?'selected':''}>下旬</option>
+      ${monthOptions}
     </select>
     <input type="date" class="e-delivery-date" value="${deliveryDate}" style="margin-top:4px;">
   `;
