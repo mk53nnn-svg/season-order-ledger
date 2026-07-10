@@ -77,12 +77,17 @@ if (!$selectedSeasonId) {
     .expand-all-btn { font-size: 12px; height: 32px; padding: 0 10px; }
     .genre-header { padding: 10px 12px; }
     .genre-name { font-size: 13px; }
-    th { font-size: 10px; padding: 6px 8px; }
-    td { padding: 8px 8px; font-size: 12px; }
-    .product-name { font-size: 12px; }
-    .code-chip { font-size: 10px; padding: 1px 6px; }
-    .action-btn { font-size: 11px; padding: 4px 8px; }
-    .stock-num { font-size: 13px; }
+    th { font-size: 11px; padding: 6px 8px; }
+    td { padding: 8px 8px; font-size: 13px; }
+    .product-name { font-size: 13px; }
+    .code-chip { display: none; }
+    .unit-qty-label { display: none; }
+    .action-btn { font-size: 12px; padding: 5px 10px; }
+    .stock-num { font-size: 14px; }
+    .col-order-qty { display: none; }
+    .col-po-qty { display: none; }
+    .col-order-qty-th { display: none; }
+    .col-po-qty-th { display: none; }
   }
 </style>
 </head>
@@ -188,15 +193,15 @@ function renderGroups(data) {
             <div class="product-cell" onclick="goDetail(${row.product_id})">
               <div class="product-name-row">
                 <span class="product-name">${escapeHtml(row.product_name)}</span>
-              <span class="code-chip" onclick="copyCode(event, '${row.product_code}', this)">
+                <span class="code-chip" onclick="copyCode(event, '${row.product_code}', this)">
                   ${escapeHtml(row.product_code)}
                 </span>
-              ${row.unit_quantity ? `<span style="font-size:11px;color:#2b6cb0;">入数：${escapeHtml(row.unit_quantity)}</span>` : ''}
+                ${row.unit_quantity ? `<span class="unit-qty-label" style="font-size:11px;color:#2b6cb0;">入数：${escapeHtml(row.unit_quantity)}</span>` : ''}
               </div>
             </div>
           </td>
-          <td class="num">${row.order_qty_sum}</td>
-          <td class="num">${row.po_qty_sum}</td>
+          <td class="num col-order-qty">${row.order_qty_sum}</td>
+          <td class="num col-po-qty">${row.po_qty_sum}</td>
           <td class="num stock-num ${stockClass}">${row.stock}</td>
           <td>${statusBtn}</td>
         </tr>`;
@@ -215,9 +220,9 @@ function renderGroups(data) {
           <table>
             <thead>
               <tr>
-                <th>商品名 ／ コード</th>
-                <th class="num" style="width:90px;">受注数</th>
-                <th class="num" style="width:90px;">発注数</th>
+                <th>商品名</th>
+                <th class="num col-order-qty-th" style="width:90px;">受注数</th>
+                <th class="num col-po-qty-th" style="width:90px;">発注数</th>
                 <th class="num" style="width:80px;">在庫</th>
                 <th style="width:100px;">状態</th>
               </tr>
