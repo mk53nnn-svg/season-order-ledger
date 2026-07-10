@@ -138,10 +138,23 @@ $clients = $clientsStmt->fetchAll();
 
     <div class="actions">
       <button type="button" class="btn-secondary" id="clear-btn">クリア</button>
-      <button type="submit" class="btn-primary">登録する</button>
+      <button type="submit" class="btn-primary">記帳する</button>
     </div>
     <div class="msg" id="msg"></div>
   </form>
+</div>
+
+<!-- 未登録取引先確認モーダル -->
+<div id="unregistered-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:90%;">
+    <h2 style="font-size:16px;font-weight:600;margin-bottom:12px;">取引先が未登録です</h2>
+    <p id="unregistered-msg" style="font-size:14px;color:#555;margin-bottom:20px;"></p>
+    <div style="display:flex;gap:10px;">
+      <button id="btn-register-and-kicho" style="flex:1;height:40px;border-radius:8px;border:none;background:#222;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">登録して記帳</button>
+      <button id="btn-kicho-only" style="flex:1;height:40px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#555;font-size:13px;cursor:pointer;">登録せずに記帳</button>
+    </div>
+    <button onclick="document.getElementById('unregistered-modal').style.display='none';" style="width:100%;margin-top:10px;height:36px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#999;font-size:13px;cursor:pointer;">キャンセル</button>
+  </div>
 </div>
 
 <script>
@@ -414,14 +427,33 @@ document.getElementById('order-form').addEventListener('submit', async (e) => {
     items: items,
   };
 
-  // 取引先がマスタに未登録かチェック
+  
   const clientRes = await fetch('../api/get_clients.php');
   const clientData = await clientRes.json();
   const registeredNames = clientData.ok ? clientData.clients.map(c => c.name) : [];
   const isUnregistered = !registeredNames.includes(clientName);
 
   if (isUnregistered) {
-    if (!confirm(`「${clientName}」は取引先マスタに未登録です。\nこのまま受注登録しますか？\n（取引先マスタへの登録は行われません）`)) {
+    document.getElementById('unregistered-msg').textContent = `「${clientName}」は取引先マスタに未登録です。どちらで記帳しますか？`;
+    const modal = document.getElementById('unregistered-modal');
+    modal.style.display = 'flex';
+
+    const choice = await new Promise(resolve => {
+      document.getElementById('btn-register-and-kicho').onclick = () => { modal.style.display = 'none'; resolve('register'); };
+      document.getElementById('btn-kicho-only').onclick = () => { modal.style.display = 'none'; resolve('kicho'); };
+      document.getElementById('btn-cancel-modal').onclick = () => { modal.style.display = 'none'; resolve('cancel'); };
+    });
+
+    if (choice === 'cancel') return;
+
+    if (choice === 'register') {
+      await fetch('../api/update_client.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_client', name: clientName }),
+      });
+    }
+  }`「${clientName}」は取引先マスタに未登録です。\nこのまま受注登録しますか？\n（取引先マスタへの登録は行われません）`)) {
       return;
     }
   }
