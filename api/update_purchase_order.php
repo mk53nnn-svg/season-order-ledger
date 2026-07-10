@@ -20,11 +20,12 @@ try {
             $id = (int)($input['id'] ?? 0);
             $orderDate = (string)($input['order_date'] ?? '');
             $quantity = (int)($input['quantity'] ?? 0);
-            if ($id <= 0 || $orderDate === '' || $quantity <= 0) {
+            $staffName = trim((string)($input['staff_name'] ?? ''));
+            if ($id <= 0 || $quantity <= 0) {
                 fail6('入力内容が正しくありません。');
             }
-            $stmt = $pdo->prepare("UPDATE purchase_orders SET order_date = :order_date, quantity = :quantity WHERE id = :id");
-            $stmt->execute(['order_date' => $orderDate, 'quantity' => $quantity, 'id' => $id]);
+            $stmt = $pdo->prepare("UPDATE purchase_orders SET order_date = :order_date, quantity = :quantity, staff_name = :staff_name WHERE id = :id");
+            $stmt->execute(['order_date' => $orderDate, 'quantity' => $quantity, 'staff_name' => $staffName, 'id' => $id]);
             echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
             break;
 

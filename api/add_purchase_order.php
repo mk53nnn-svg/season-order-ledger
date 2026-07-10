@@ -15,6 +15,7 @@ $seasonId = (int)($input['season_id'] ?? 0);
 $productId = (int)($input['product_id'] ?? 0);
 $orderDate = (string)($input['order_date'] ?? '');
 $quantity = (int)($input['quantity'] ?? 0);
+$staffName = trim((string)($input['staff_name'] ?? ''));
 
 if ($seasonId <= 0 || $productId <= 0 || $orderDate === '' || $quantity <= 0) {
     fail4('入力内容が正しくありません。');
@@ -22,14 +23,15 @@ if ($seasonId <= 0 || $productId <= 0 || $orderDate === '' || $quantity <= 0) {
 
 $pdo = get_pdo();
 $stmt = $pdo->prepare("
-  INSERT INTO purchase_orders (season_id, product_id, order_date, quantity)
-  VALUES (:season_id, :product_id, :order_date, :quantity)
+  INSERT INTO purchase_orders (season_id, product_id, order_date, quantity, staff_name)
+  VALUES (:season_id, :product_id, :order_date, :quantity, :staff_name)
 ");
 $stmt->execute([
     'season_id' => $seasonId,
     'product_id' => $productId,
     'order_date' => $orderDate,
     'quantity' => $quantity,
+    'staff_name' => $staffName,
 ]);
 
 echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);

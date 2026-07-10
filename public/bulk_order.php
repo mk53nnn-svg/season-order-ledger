@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -76,6 +76,11 @@ if (!$selectedSeasonId) {
   <div class="date-row">
     <label>発注日：</label>
     <input type="date" id="order-date">
+  </div>
+  <div class="date-row">
+    <label>発注者：</label>
+    <select id="staff-select" style="height:36px;border-radius:8px;border:1px solid #ccc;padding:0 10px;font-size:14px;"></select>
+    <input type="text" id="staff-input" placeholder="または自由入力" style="height:36px;border-radius:8px;border:1px solid #ccc;padding:0 10px;font-size:14px;width:160px;">
   </div>
 
   <p class="note">発注数を入力して「一括発注を登録する」ボタンを押してください。数量が空欄の商品はスキップされます。</p>
@@ -174,6 +179,7 @@ function renderTable(data) {
 }
 
 let pendingItems = [];
+let pendingStaffName = '';
 
 function submitBulkOrder() {
   const msg = document.getElementById('msg');
@@ -185,6 +191,10 @@ function submitBulkOrder() {
     msg.textContent = '発注日を入力してください。';
     return;
   }
+
+  const staffSelect = document.getElementById('staff-select');
+  const staffInput = document.getElementById('staff-input');
+  const staffName = staffSelect && staffSelect.value ? staffSelect.value : (staffInput ? staffInput.value.trim() : '');
 
   pendingItems = [];
   document.querySelectorAll('.order-input').forEach(input => {
@@ -207,10 +217,12 @@ function submitBulkOrder() {
     return;
   }
 
+  pendingStaffName = staffName;
+
   // 確認モーダルを表示
   const d = new Date(orderDate);
   document.getElementById('confirm-date').textContent =
-    `発注日：${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日　合計 ${pendingItems.length} 件`;
+    `発注日：${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日　発注者：${staffName}　合計 ${pendingItems.length} 件`;
   document.getElementById('confirm-tbody').innerHTML = pendingItems.map(item => `
     <tr>
       <td>${escapeHtml(item.product_name)}</td>
@@ -232,7 +244,7 @@ async function executeOrder() {
     const res = await fetch('../api/bulk_order.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ season_id: SEASON_ID, items: pendingItems }),
+      body: JSON.stringify({ season_id: SEASON_ID, items: pendingItems, staff_name: pendingStaffName }),
     });
     const result = await res.json();
     if (result.ok) {
@@ -266,6 +278,23 @@ function escapeHtml(str) {
 }
 
 loadData();
+
+// 発注者リスト読み込み
+async function loadStaffList() {
+  const res = await fetch('../api/staff.php');
+  const result = await res.json();
+  if (!result.ok) return;
+  const select = document.getElementById('staff-select');
+  const defaultStaff = result.staff.find(s => s.is_default == 1);
+  select.innerHTML = '<option value="">-- 選択 --</option>' +
+    result.staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+  if (defaultStaff) select.value = defaultStaff.name;
+  select.addEventListener('change', () => {
+    const input = document.getElementById('staff-input');
+    if (input) { input.value = ''; input.disabled = !!select.value; input.style.background = select.value ? '#f0f0f0' : ''; }
+  });
+}
+loadStaffList();
 </script>
 </body>
 </html>

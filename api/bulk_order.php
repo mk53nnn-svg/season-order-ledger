@@ -7,6 +7,7 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 $seasonId = (int)($input['season_id'] ?? 0);
 $items = $input['items'] ?? [];
+$staffName = trim((string)($input['staff_name'] ?? ''));
 
 if ($seasonId <= 0 || !is_array($items) || count($items) === 0) {
     echo json_encode(['ok' => false, 'error' => 'パラメータが不足しています。'], JSON_UNESCAPED_UNICODE);
@@ -18,8 +19,8 @@ $pdo = get_pdo();
 try {
     $pdo->beginTransaction();
     $stmt = $pdo->prepare("
-        INSERT INTO purchase_orders (season_id, product_id, order_date, quantity)
-        VALUES (:season_id, :product_id, :order_date, :quantity)
+        INSERT INTO purchase_orders (season_id, product_id, order_date, quantity, staff_name)
+        VALUES (:season_id, :product_id, :order_date, :quantity, :staff_name)
     ");
     foreach ($items as $item) {
         $productId = (int)($item['product_id'] ?? 0);
@@ -31,6 +32,7 @@ try {
             'product_id' => $productId,
             'order_date' => $orderDate,
             'quantity' => $quantity,
+            'staff_name' => $staffName,
         ]);
     }
     $pdo->commit();

@@ -115,6 +115,22 @@ function goBack() {
   window.location.href = `summary.php?season_id=${SEASON_ID}`;
 }
 
+async function loadStaff() {
+  const res = await fetch('../api/staff.php');
+  const result = await res.json();
+  if (!result.ok) return;
+  const select = document.getElementById('po-staff-select');
+  if (!select) return;
+  const defaultStaff = result.staff.find(s => s.is_default == 1);
+  select.innerHTML = '<option value="">-- 選択 --</option>' +
+    result.staff.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join('');
+  if (defaultStaff) select.value = defaultStaff.name;
+  select.addEventListener('change', () => {
+    const input = document.getElementById('po-staff-input');
+    if (input) { input.value = ''; input.disabled = !!select.value; input.style.background = select.value ? '#f0f0f0' : ''; }
+  });
+}
+
 async function loadDetail() {
   const res = await fetch(`../api/get_product_detail.php?product_id=${PRODUCT_ID}&season_id=${SEASON_ID}`);
   const result = await res.json();
@@ -140,6 +156,7 @@ function render() {
         <tr data-po-id="${po.id}" ${po.is_tanoroshi ? 'style="background:#f0f5ff;"' : ''}>
           <td class="po-date">${po.is_tanoroshi ? '<span style="font-size:11px;color:#2b6cb0;font-weight:600;">棚卸在庫</span>' : po.order_date}</td>
           <td class="num po-qty">${po.quantity}</td>
+          <td class="po-staff">${escapeHtml(po.staff_name || '')}</td>
           <td colspan="2">
             <div class="row-actions">
               <button class="edit-btn" onclick="startEditPo(this, ${po.id}, ${po.is_tanoroshi})">編集</button>
@@ -165,7 +182,7 @@ function render() {
 
     <div class="po-history" id="po-history">
       <table>
-        <thead><tr><th>発注日</th><th class="num">発注数</th><th colspan="2"></th></tr></thead>
+        <thead><tr><th>発注日</th><th class="num">発注数</th><th>発注者</th><th colspan="2"></th></tr></thead>
         <tbody id="po-tbody">${poRows}</tbody>
       </table>
     </div>
@@ -180,6 +197,13 @@ function render() {
         <div class="field">
           <label>発注日</label>
           <input type="date" id="po-date-input" value="${new Date().toISOString().slice(0,10)}">
+        </div>
+        <div class="field">
+          <label>発注者</label>
+          <div style="display:flex;gap:6px;">
+            <select id="po-staff-select" style="flex:1;height:36px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:14px;"></select>
+            <input type="text" id="po-staff-input" placeholder="または自由入力" style="flex:1;height:36px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:14px;">
+          </div>
         </div>
         <button class="btn-save" onclick="savePurchaseOrder()">保存する</button>
       </div>
@@ -230,11 +254,25 @@ function togglePoHistory() {
 async function savePurchaseOrder() {
   const qty = parseInt(document.getElementById('po-qty-input').value) || 0;
   const date = document.getElementById('po-date-input').value;
+  const staffSelect = document.getElementById('po-staff-select');
+  const staffInput = document.getElementById('po-staff-input');
+  const staffName = staffSelect && staffSelect.value ? staffSelect.value : (staffInput ? staffInput.value.trim() : '');
   if (qty <= 0 || !date) return;
+
+  // 自由入力した場合はマスタに追加
+  if (staffInput && staffInput.value.trim() && !staffSelect.value) {
+    await fetch('../api/staff.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_from_input', name: staffInput.value.trim() }),
+    });
+    await loadStaff();
+  }
+
   await fetch('../api/add_purchase_order.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ season_id: SEASON_ID, product_id: PRODUCT_ID, order_date: date, quantity: qty }),
+    body: JSON.stringify({ season_id: SEASON_ID, product_id: PRODUCT_ID, order_date: date, quantity: qty, staff_name: staffName }),
   });
   document.getElementById('po-saved-msg').classList.add('show');
   document.getElementById('po-qty-input').value = '';
@@ -245,10 +283,14 @@ function startEditPo(btn, poId, isTanoroshi) {
   const row = btn.closest('tr');
   const date = isTanoroshi ? '' : row.querySelector('.po-date').textContent;
   const qty = row.querySelector('.po-qty').textContent;
+  const staff = row.querySelector('.po-staff') ? row.querySelector('.po-staff').textContent : '';
   row.classList.add('edit-row');
   row.querySelector('.po-date').innerHTML = isTanoroshi
     ? '<span style="font-size:11px;color:#2b6cb0;font-weight:600;">棚卸在庫</span>'
     : `<input type="date" class="e-po-date" value="${date}">`;
+  if (row.querySelector('.po-staff')) {
+    row.querySelector('.po-staff').innerHTML = `<input type="text" class="e-po-staff" value="${escapeHtml(staff)}" style="width:80px;height:28px;border-radius:6px;border:1px solid #ccc;padding:0 6px;font-size:12px;">`;
+  }
   row.querySelector('.po-qty').innerHTML = `<input type="number" class="e-po-qty" value="${qty}" style="text-align:right;">`;
   row.cells[2].colSpan = 1;
   row.cells[2].innerHTML = `<div class="edit-actions">
@@ -259,13 +301,14 @@ function startEditPo(btn, poId, isTanoroshi) {
 
 async function confirmEditPo(btn, poId) {
   const row = btn.closest('tr');
-  const date = row.querySelector('.e-po-date').value;
+  const date = row.querySelector('.e-po-date') ? row.querySelector('.e-po-date').value : '棚卸';
   const qty = parseInt(row.querySelector('.e-po-qty').value) || 0;
-  if (!date || qty <= 0) return;
+  const staff = row.querySelector('.e-po-staff') ? row.querySelector('.e-po-staff').value.trim() : '';
+  if (qty <= 0) return;
   await fetch('../api/update_purchase_order.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'update_purchase_order', id: poId, order_date: date, quantity: qty }),
+    body: JSON.stringify({ action: 'update_purchase_order', id: poId, order_date: date, quantity: qty, staff_name: staff }),
   });
   await loadDetail();
   document.getElementById('po-history').classList.add('show');
@@ -354,6 +397,7 @@ function escapeHtml(str) {
 }
 
 loadDetail();
+loadStaff();
 </script>
 </body>
 </html>

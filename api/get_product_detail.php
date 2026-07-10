@@ -53,7 +53,7 @@ $ordersFormatted = array_map(function ($o) use (&$orderTotal) {
 
 // 発注履歴（棚卸を一番上、それ以外は日付順）
 $stmt = $pdo->prepare("
-  SELECT id, order_date, quantity
+  SELECT id, order_date, quantity, staff_name
   FROM purchase_orders
   WHERE product_id = :product_id AND season_id = :season_id
   ORDER BY CASE WHEN order_date = '棚卸' THEN 0 ELSE 1 END ASC, id ASC
@@ -68,6 +68,7 @@ $poFormatted = array_map(function ($po) use (&$poTotal) {
         'id' => (int)$po['id'],
         'order_date' => $po['order_date'],
         'quantity' => (int)$po['quantity'],
+        'staff_name' => $po['staff_name'] ?? '',
         'is_tanoroshi' => $po['order_date'] === '棚卸',
     ];
 }, $poRows);

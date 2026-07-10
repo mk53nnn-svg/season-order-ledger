@@ -64,6 +64,7 @@
     <div class="tab" data-tab="product">商品</div>
     <div class="tab" data-tab="client">取引先</div>
     <div class="tab" data-tab="season">シーズン管理</div>
+    <div class="tab" data-tab="staff">発注者</div>
   </div>
 
   <!-- ジャンル -->
@@ -126,6 +127,19 @@
     <table>
       <thead><tr><th>シーズン名</th><th>開始日</th><th>終了日</th><th>状態</th><th style="width:160px;"></th></tr></thead>
       <tbody id="season-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- 発注者 -->
+  <div class="panel" id="panel-staff">
+    <div class="add-row">
+      <input type="text" id="new-staff-name" placeholder="発注者名を入力">
+      <button onclick="addStaff()">追加する</button>
+    </div>
+    <p class="note">「デフォルト」に設定した発注者が発注入力時の初期値になります。</p>
+    <table>
+      <thead><tr><th>発注者名</th><th>デフォルト</th><th style="width:180px;"></th></tr></thead>
+      <tbody id="staff-tbody"></tbody>
     </table>
   </div>
 
@@ -677,6 +691,82 @@ function escapeHtml(str) {
 loadMaster().then(() => initDragAndDrop('genre-tbody', 'reorder_genres', '../api/master_genre_product.php'));
 loadClients().then(() => initDragAndDrop('client-tbody', 'reorder_clients', '../api/update_client.php'));
 loadSeasons();
+loadStaffMaster();
+
+async function loadStaffMaster() {
+  const res = await fetch('../api/staff.php');
+  const result = await res.json();
+  if (!result.ok) return;
+  const tbody = document.getElementById('staff-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = result.staff.map(s => `
+    <tr data-id="${s.id}" data-name="${escapeHtml(s.name)}">
+      <td class="td-staff-name">${escapeHtml(s.name)}</td>
+      <td>${s.is_default == 1 ? '<span style="color:#1e7e34;font-weight:600;">デフォルト</span>' : ''}</td>
+      <td><div class="row-actions">
+        ${s.is_default != 1 ? `<button class="btn-mini btn-edit" onclick="setDefaultStaff(${s.id})">デフォルトに設定</button>` : ''}
+        <button class="btn-mini btn-edit" onclick="editStaff(this)">編集</button>
+        <button class="btn-mini btn-delete" onclick="deleteStaff(${s.id})">削除</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+async function addStaff() {
+  const name = document.getElementById('new-staff-name').value.trim();
+  if (!name) { showMsg('発注者名を入力してください', true); return; }
+  const res = await fetch('../api/staff.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'add_staff', name}),
+  });
+  const result = await res.json();
+  if (result.ok) { document.getElementById('new-staff-name').value = ''; showMsg('追加しました'); await loadStaffMaster(); }
+  else { showMsg(result.error || '追加に失敗しました', true); }
+}
+
+function editStaff(btn) {
+  const row = btn.closest('tr');
+  const name = row.dataset.name;
+  const id = row.dataset.id;
+  row.querySelector('.td-staff-name').innerHTML = `<input type="text" class="inline-edit e-staff-name" value="${escapeHtml(name)}">`;
+  row.cells[2].innerHTML = `<div class="row-actions">
+    <button class="btn-mini btn-confirm" onclick="confirmEditStaff(this, ${id}, '${escapeHtml(name)}')">保存</button>
+    <button class="btn-mini btn-cancel" onclick="loadStaffMaster()">取消</button>
+  </div>`;
+}
+
+async function confirmEditStaff(btn, id, oldName) {
+  const row = btn.closest('tr');
+  const newName = row.querySelector('.e-staff-name').value.trim();
+  if (!newName) return;
+  const res = await fetch('../api/staff.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'update_staff', id, name: newName, old_name: oldName}),
+  });
+  const result = await res.json();
+  if (result.ok) { showMsg('更新しました'); await loadStaffMaster(); }
+  else { showMsg(result.error || '更新に失敗しました', true); }
+}
+
+async function deleteStaff(id) {
+  if (!confirm('この発注者を削除しますか？')) return;
+  const res = await fetch('../api/staff.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'delete_staff', id}),
+  });
+  const result = await res.json();
+  if (result.ok) { showMsg('削除しました'); await loadStaffMaster(); }
+  else { showMsg(result.error || '削除に失敗しました', true); }
+}
+
+async function setDefaultStaff(id) {
+  const res = await fetch('../api/staff.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'set_default', id}),
+  });
+  const result = await res.json();
+  if (result.ok) { showMsg('デフォルトを変更しました'); await loadStaffMaster(); }
+  else { showMsg(result.error || '変更に失敗しました', true); }
+}
 </script>
 </body>
 </html>
