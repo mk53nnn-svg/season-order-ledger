@@ -89,7 +89,9 @@
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
       <button class="expand-products-btn" id="expand-products-btn" onclick="toggleAllProducts()">すべて展開</button>
-      <button class="expand-products-btn" style="color:#1e7e34;border-color:#1e7e34;background:#e6f4ea;" onclick="saveAllEditing()">編集中をすべて保存</button>
+      <button class="expand-products-btn" id="bulk-edit-btn" style="color:#2b6cb0;border-color:#2b6cb0;background:#eef5fc;" onclick="toggleBulkEdit()">一括編集</button>
+      <button class="expand-products-btn" id="bulk-save-btn" style="display:none;color:#1e7e34;border-color:#1e7e34;background:#e6f4ea;" onclick="saveAllEditing()">すべて保存</button>
+      <button class="expand-products-btn" id="bulk-cancel-btn" style="display:none;" onclick="cancelBulkEdit()">キャンセル</button>
     </div>
     <div id="product-group-container"></div>
   </div>
@@ -174,9 +176,8 @@ function renderGenres() {
       <td><span class="drag-handle">&#9776;</span></td>
       <td class="td-name">${escapeHtml(g.name)}</td>
       <td><div class="row-actions">
-        <button class="btn-mini btn-edit" onclick="editGenre(this)">編集</button>
-        <button class="btn-mini btn-delete" onclick="deleteGenre(${g.id})">削除</button>
-      </div></td>
+          <button class="btn-mini btn-delete product-delete-btn" onclick="deleteProduct(${p.id})">削除</button>
+        </div></td>
     </tr>`).join('');
 }
 
@@ -414,41 +415,41 @@ async function addProduct() {
   } else { showMsg(result.error || '追加に失敗しました', true); }
 }
 
-function editProduct(btn) {
-  const row = btn.closest('tr');
-  const genreId = row.dataset.genreId;
-  const name = row.querySelector('.td-name').textContent;
-  const code = row.querySelector('.td-code').textContent;
-  const unit = row.querySelector('.td-unit') ? row.querySelector('.td-unit').textContent : '';
-  row.querySelector('.td-name').innerHTML = `<input type="text" class="inline-edit e-name" value="${escapeHtml(name)}">`;
-  row.querySelector('.td-code').innerHTML = `<input type="text" class="inline-edit e-code" value="${escapeHtml(code)}">`;
-  row.querySelector('.td-unit').innerHTML = `<input type="text" class="inline-edit e-unit" value="${escapeHtml(unit)}">`;
-  row.cells[4].innerHTML = `<div class="row-actions">
-    <button class="btn-mini btn-confirm" onclick="confirmEditProduct(this, '${genreId}')">保存</button>
-    <button class="btn-mini btn-cancel" onclick="loadMaster()">取消</button>
-  </div>`;
+let bulkEditMode = false;
+
+function toggleBulkEdit() {
+  bulkEditMode = true;
+  // すべて展開
+  document.querySelectorAll('.product-genre-body').forEach(b => b.classList.add('open'));
+  document.querySelectorAll('.product-genre-chevron').forEach(c => c.classList.add('open'));
+  productAllExpanded = true;
+  document.getElementById('expand-products-btn').textContent = 'すべて折りたたむ';
+
+  // 全行を編集モードに
+  document.querySelectorAll('#product-group-container tr[data-id]').forEach(row => {
+    const name = row.querySelector('.td-name').textContent;
+    const code = row.querySelector('.td-code').textContent;
+    const unit = row.querySelector('.td-unit') ? row.querySelector('.td-unit').textContent : '';
+    row.querySelector('.td-name').innerHTML = `<input type="text" class="inline-edit e-name" value="${escapeHtml(name)}">`;
+    row.querySelector('.td-code').innerHTML = `<input type="text" class="inline-edit e-code" value="${escapeHtml(code)}">`;
+    if (row.querySelector('.td-unit')) row.querySelector('.td-unit').innerHTML = `<input type="text" class="inline-edit e-unit" value="${escapeHtml(unit)}">`;
+    const deleteBtn = row.cells[4].querySelector('.product-delete-btn');
+    const deleteId = deleteBtn ? deleteBtn.getAttribute('onclick').match(/\d+/) : null;
+    row.cells[4].querySelector('.row-actions').innerHTML = deleteId
+      ? `<button class="btn-mini btn-delete product-delete-btn" onclick="deleteProduct(${deleteId[0]})">削除</button>`
+      : '';
+  });
+
+  document.getElementById('bulk-edit-btn').style.display = 'none';
+  document.getElementById('bulk-save-btn').style.display = '';
+  document.getElementById('bulk-cancel-btn').style.display = '';
 }
 
-async function confirmEditProduct(btn, genreId) {
-  const row = btn.closest('tr');
-  const id = parseInt(row.dataset.id);
-  const name = row.querySelector('.e-name').value.trim();
-  const code = row.querySelector('.e-code').value.trim();
-  const unit = row.querySelector('.e-unit') ? row.querySelector('.e-unit').value.trim() : '';
-  if (!name) return;
-
-  // 現在開いているジャンルを記憶
+async function cancelBulkEdit() {
+  bulkEditMode = false;
   const openGenres = Array.from(document.querySelectorAll('.product-genre-body.open'))
     .map(b => b.closest('.product-genre-group').querySelector('.product-genre-title span').textContent);
-
-  await fetch('../api/master_genre_product.php', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action: 'update_product', id, genre_id: parseInt(genreId), product_code: code, product_name: name, unit_quantity: unit}),
-  });
-  showMsg('更新しました');
   await loadMaster();
-
-  // 開いていたジャンルを再展開
   document.querySelectorAll('.product-genre-group').forEach(group => {
     const title = group.querySelector('.product-genre-title span').textContent;
     if (openGenres.includes(title)) {
@@ -456,6 +457,9 @@ async function confirmEditProduct(btn, genreId) {
       group.querySelector('.product-genre-chevron').classList.add('open');
     }
   });
+  document.getElementById('bulk-edit-btn').style.display = '';
+  document.getElementById('bulk-save-btn').style.display = 'none';
+  document.getElementById('bulk-cancel-btn').style.display = 'none';
 }
 
 async function deleteProduct(id) {
@@ -631,6 +635,10 @@ async function saveAllEditing() {
   }
 
   showMsg('すべて保存しました');
+  bulkEditMode = false;
+  document.getElementById('bulk-edit-btn').style.display = '';
+  document.getElementById('bulk-save-btn').style.display = 'none';
+  document.getElementById('bulk-cancel-btn').style.display = 'none';
   await loadMaster();
 
   document.querySelectorAll('.product-genre-group').forEach(group => {
