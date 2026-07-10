@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -414,6 +414,11 @@ async function addProduct() {
 }
 
 function editProduct(btn) {
+  // 他の編集中の行をキャンセルして元に戻す
+  document.querySelectorAll('.btn-mini-cancel').forEach(b => {
+    if (b.textContent === '取消') b.click();
+  });
+
   const row = btn.closest('tr');
   const genreId = row.dataset.genreId;
   const name = row.querySelector('.td-name').textContent;
