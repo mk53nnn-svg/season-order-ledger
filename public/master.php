@@ -414,27 +414,23 @@ function editProduct(btn) {
   const genreId = row.dataset.genreId;
   const name = row.querySelector('.td-name').textContent;
   const code = row.querySelector('.td-code').textContent;
-  const genreOptions = masterData.genres.filter(g => g.is_active == 1)
-    .map(g => `<option value="${g.id}" ${g.id == genreId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`).join('');
-  row.querySelector('.td-genre').innerHTML = `<select class="inline-edit e-genre">${genreOptions}</select>`;
   row.querySelector('.td-name').innerHTML = `<input type="text" class="inline-edit e-name" value="${escapeHtml(name)}">`;
   row.querySelector('.td-code').innerHTML = `<input type="text" class="inline-edit e-code" value="${escapeHtml(code)}">`;
   row.cells[3].innerHTML = `<div class="row-actions">
-    <button class="btn-mini btn-confirm" onclick="confirmEditProduct(this)">保存</button>
+    <button class="btn-mini btn-confirm" onclick="confirmEditProduct(this, '${genreId}')">保存</button>
     <button class="btn-mini btn-cancel" onclick="loadMaster()">取消</button>
   </div>`;
 }
 
-async function confirmEditProduct(btn) {
+async function confirmEditProduct(btn, genreId) {
   const row = btn.closest('tr');
   const id = parseInt(row.dataset.id);
-  const genreId = parseInt(row.querySelector('.e-genre').value);
   const name = row.querySelector('.e-name').value.trim();
   const code = row.querySelector('.e-code').value.trim();
   if (!name) return;
   await fetch('../api/master_genre_product.php', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action: 'update_product', id, genre_id: genreId, product_code: code, product_name: name}),
+    body: JSON.stringify({action: 'update_product', id, genre_id: parseInt(genreId), product_code: code, product_name: name}),
   });
   showMsg('更新しました');
   await loadMaster();
