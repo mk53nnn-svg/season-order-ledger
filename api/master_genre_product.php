@@ -103,6 +103,29 @@ try {
             out(['ok' => true]);
             break;
 
+        case 'bulk_update_products':
+            $products = $input['products'] ?? [];
+            if (!is_array($products) || count($products) === 0) {
+                out(['ok' => false, 'error' => '商品データがありません。']);
+            }
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare("
+                UPDATE products SET genre_id = :genre_id, product_code = :code, product_name = :name, unit_quantity = :unit_qty
+                WHERE id = :id
+            ");
+            foreach ($products as $p) {
+                $id = (int)($p['id'] ?? 0);
+                $genreId = (int)($p['genre_id'] ?? 0);
+                $code = trim((string)($p['product_code'] ?? ''));
+                $name = trim((string)($p['product_name'] ?? ''));
+                $unitQty = trim((string)($p['unit_quantity'] ?? ''));
+                if ($id <= 0 || $genreId <= 0 || $name === '') continue;
+                $stmt->execute(['genre_id' => $genreId, 'code' => $code, 'name' => $name, 'unit_qty' => $unitQty, 'id' => $id]);
+            }
+            $pdo->commit();
+            out(['ok' => true]);
+            break;
+
         case 'delete_product':
             $id = (int)($input['id'] ?? 0);
             // 論理削除（過去の受注データとの整合性を保つため）

@@ -629,25 +629,28 @@ function initDragAndDrop(tbodyId, saveAction, apiUrl) {
 }
 
 async function saveAllEditing() {
-  const editingRows = document.querySelectorAll('tr .e-name');
+  const editingRows = document.querySelectorAll('#product-group-container tr .e-name');
   if (editingRows.length === 0) { showMsg('編集中の行がありません', true); return; }
 
   const openGenres = Array.from(document.querySelectorAll('.product-genre-body.open'))
     .map(b => b.closest('.product-genre-group').querySelector('.product-genre-title span').textContent);
 
-  for (const nameInput of editingRows) {
+  const products = [];
+  editingRows.forEach(nameInput => {
     const row = nameInput.closest('tr');
     const id = parseInt(row.dataset.id);
     const genreId = parseInt(row.dataset.genreId);
     const name = nameInput.value.trim();
     const code = row.querySelector('.e-code') ? row.querySelector('.e-code').value.trim() : '';
     const unit = row.querySelector('.e-unit') ? row.querySelector('.e-unit').value.trim() : '';
-    if (!name) continue;
-    await fetch('../api/master_genre_product.php', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({action: 'update_product', id, genre_id: genreId, product_code: code, product_name: name, unit_quantity: unit}),
-    });
-  }
+    if (!name) return;
+    products.push({id, genre_id: genreId, product_code: code, product_name: name, unit_quantity: unit});
+  });
+
+  await fetch('../api/master_genre_product.php', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'bulk_update_products', products}),
+  });
 
   showMsg('すべて保存しました');
   bulkEditMode = false;
