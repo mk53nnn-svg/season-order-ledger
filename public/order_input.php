@@ -243,12 +243,11 @@ function createCustomSelect(options, placeholder, onChange) {
       const spaceBelow = window.innerHeight - rect.bottom;
       // 下に十分なスペースがあれば下に、なければ上に表示
       if (spaceBelow > dropHeight || spaceBelow > 150) {
-        dropdown.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+        dropdown.style.top = (rect.bottom + 4) + 'px';
       } else {
-        dropdown.style.top = (rect.top + window.scrollY - dropHeight - 4) + 'px';
+        dropdown.style.top = (rect.top - dropHeight - 4) + 'px';
       }
-      dropdown.style.left = (rect.left + window.scrollX) + 'px';
-      dropdown.style.width = rect.width + 'px';
+      dropdown.style.left = rect.left + 'px';
     }
   });
 
