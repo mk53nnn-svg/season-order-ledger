@@ -67,6 +67,7 @@ if (!$selectedSeasonId) {
   .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .expand-products-btn { font-size: 12px; color: #888; border: 1px solid #ddd; background: #fff; border-radius: 8px; padding: 5px 12px; cursor: pointer; }
 
+  .sp-expand-btn { display: none; }
   @media (max-width: 600px) {
     .page { padding: 12px 8px; }
     .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
@@ -75,6 +76,9 @@ if (!$selectedSeasonId) {
     .filters select { font-size: 12px; height: 32px; flex: 1; }
     .btn-excel { font-size: 12px; height: 32px; padding: 0 10px; }
     .expand-all-btn { font-size: 12px; height: 32px; padding: 0 10px; }
+    #filter-select { display: none; }
+    .sp-expand-btn { display: block; font-size: 12px; height: 32px; padding: 0 10px; border: 1px solid #ccc; background: #fff; border-radius: 8px; cursor: pointer; }
+    .sp-expand-btn-wrapper { display: block; margin-bottom: 10px; }
     .genre-header { padding: 10px 12px; }
     .genre-name { font-size: 13px; }
     th { font-size: 11px; padding: 6px 8px; }
@@ -121,6 +125,9 @@ if (!$selectedSeasonId) {
     <span id="alert-text"></span>
   </div>
 
+  <div class="sp-expand-btn-wrapper" style="display:none;">
+    <button class="sp-expand-btn" onclick="toggleAllGenres()" id="sp-expand-btn">すべて展開</button>
+  </div>
   <div id="summary-container">
     <div class="loading">読み込み中...</div>
   </div>
@@ -249,6 +256,8 @@ function toggleAllGenres() {
   document.querySelectorAll('.genre-body').forEach(b => b.classList.toggle('open', allExpanded));
   document.querySelectorAll('.genre-chevron').forEach(c => c.classList.toggle('open', allExpanded));
   document.getElementById('expand-all-btn').textContent = allExpanded ? 'すべて折りたたむ' : 'すべて展開';
+  const spBtn = document.getElementById('sp-expand-btn');
+  if (spBtn) spBtn.textContent = allExpanded ? 'すべて折りたたむ' : 'すべて展開';
 }
 
 function escapeHtml(str) {
