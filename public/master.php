@@ -415,15 +415,18 @@ async function addProduct() {
 
 function editProduct(btn) {
   // 他の編集中の行をキャンセルして元に戻す
-  // 編集中の行を元に戻す（loadMasterを呼ばずにDOMで直接処理）
+  // 編集中の行を元に戻す（入力中の値を保持したまま表示に戻す）
   document.querySelectorAll('tr').forEach(r => {
-    if (!r.querySelector('.e-name')) return;
     const nameInput = r.querySelector('.e-name');
+    if (!nameInput) return;
     const codeInput = r.querySelector('.e-code');
     const unitInput = r.querySelector('.e-unit');
-    if (nameInput) r.querySelector('.td-name').innerHTML = escapeHtml(nameInput.value || nameInput.defaultValue);
-    if (codeInput) r.querySelector('.td-code').innerHTML = escapeHtml(codeInput.value || codeInput.defaultValue);
-    if (unitInput) r.querySelector('.td-unit').innerHTML = escapeHtml(unitInput.value || unitInput.defaultValue);
+    const nameVal = nameInput.value;
+    const codeVal = codeInput ? codeInput.value : '';
+    const unitVal = unitInput ? unitInput.value : '';
+    r.querySelector('.td-name').innerHTML = escapeHtml(nameVal);
+    r.querySelector('.td-code').innerHTML = escapeHtml(codeVal);
+    if (r.querySelector('.td-unit')) r.querySelector('.td-unit').innerHTML = escapeHtml(unitVal);
     if (r.cells[4]) r.cells[4].innerHTML = `<div class="row-actions">
       <button class="btn-mini btn-edit" onclick="editProduct(this)">編集</button>
       <button class="btn-mini btn-delete" onclick="deleteProduct(${r.dataset.id})">削除</button>
