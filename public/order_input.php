@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -39,7 +39,7 @@ $clients = $clientsStmt->fetchAll();
   .client-note { font-size: 11px; color: #999; }
   .delivery-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
   .delivery-row select { height: 38px; border-radius: 8px; border: 1px solid #ccc; padding: 0 8px; font-size: 14px; background: #fafafa; }
-  .item-row { display: grid; grid-template-columns: 1fr 1fr 90px 32px; gap: 8px; align-items: start; margin-bottom: 10px; }
+  .item-row { display: grid; grid-template-columns: 1fr 1fr 90px 32px; gap: 8px; align-items: start; margin-bottom: 10px; position: relative; }
   .item-row input { height: 36px; border-radius: 8px; border: 1px solid #ccc; padding: 0 8px; font-size: 13px; background: #fafafa; }
   .del-btn { width: 32px; height: 36px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #999; cursor: pointer; font-size: 16px; margin-top: 0; }
   .add-btn { font-size: 12px; color: #2b6cb0; border: 1px solid #2b6cb0; background: #eef5fc; border-radius: 8px; padding: 6px 12px; cursor: pointer; margin-bottom: 4px; }
@@ -53,6 +53,7 @@ $clients = $clientsStmt->fetchAll();
   .msg.error { background: #fdecea; color: #c0392b; display: block; }
 
   /* カスタムドロップダウン */
+  .custom-select { position: relative; width: 100%; }
   .custom-select { position: relative; width: 100%; }
   .custom-select-trigger { height: 38px; border-radius: 8px; border: 1px solid #ccc; padding: 0 10px; font-size: 14px; color: #222; background: #fafafa; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
   .custom-select-trigger:hover { border-color: #4a90d9; }
