@@ -83,6 +83,7 @@
       <select id="new-product-genre"></select>
       <input type="text" id="new-product-name" placeholder="商品名">
       <input type="text" id="new-product-code" placeholder="商品コード">
+      <input type="text" id="new-product-unit" placeholder="入数（例：100入）">
       <button onclick="addProduct()">追加する</button>
     </div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
@@ -207,6 +208,7 @@ function renderProducts() {
         <td><span class="drag-handle">&#9776;</span></td>
         <td class="td-name">${escapeHtml(p.product_name)}</td>
         <td class="td-code">${escapeHtml(p.product_code)}</td>
+        <td class="td-unit">${escapeHtml(p.unit_quantity || '')}</td>
         <td><div class="row-actions">
           <button class="btn-mini btn-edit" onclick="editProduct(this)">編集</button>
           <button class="btn-mini btn-delete" onclick="deleteProduct(${p.id})">削除</button>
@@ -224,7 +226,7 @@ function renderProducts() {
         </div>
         <div class="product-genre-body">
           <table>
-            <thead><tr><th style="width:30px;"></th><th>商品名</th><th>コード</th><th style="width:140px;"></th></tr></thead>
+            <thead><tr><th style="width:30px;"></th><th>商品名</th><th>コード</th><th>入数</th><th style="width:140px;"></th></tr></thead>
             <tbody id="product-tbody-${g.id}">${rows}</tbody>
           </table>
         </div>
@@ -396,14 +398,16 @@ async function addProduct() {
   const code = document.getElementById('new-product-code').value.trim();
   const name = document.getElementById('new-product-name').value.trim();
   if (!genreId || !name) { showMsg('ジャンルと商品名は必須です', true); return; }
+  const unit = document.getElementById('new-product-unit').value.trim();
   const res = await fetch('../api/master_genre_product.php', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action: 'add_product', genre_id: genreId, product_code: code, product_name: name}),
+    body: JSON.stringify({action: 'add_product', genre_id: genreId, product_code: code, product_name: name, unit_quantity: unit}),
   });
   const result = await res.json();
   if (result.ok) {
     document.getElementById('new-product-code').value = '';
     document.getElementById('new-product-name').value = '';
+    document.getElementById('new-product-unit').value = '';
     showMsg('商品を追加しました');
     await loadMaster();
   } else { showMsg(result.error || '追加に失敗しました', true); }
@@ -414,9 +418,11 @@ function editProduct(btn) {
   const genreId = row.dataset.genreId;
   const name = row.querySelector('.td-name').textContent;
   const code = row.querySelector('.td-code').textContent;
+  const unit = row.querySelector('.td-unit') ? row.querySelector('.td-unit').textContent : '';
   row.querySelector('.td-name').innerHTML = `<input type="text" class="inline-edit e-name" value="${escapeHtml(name)}">`;
   row.querySelector('.td-code').innerHTML = `<input type="text" class="inline-edit e-code" value="${escapeHtml(code)}">`;
-  row.cells[3].innerHTML = `<div class="row-actions">
+  row.querySelector('.td-unit').innerHTML = `<input type="text" class="inline-edit e-unit" value="${escapeHtml(unit)}">`;
+  row.cells[4].innerHTML = `<div class="row-actions">
     <button class="btn-mini btn-confirm" onclick="confirmEditProduct(this, '${genreId}')">保存</button>
     <button class="btn-mini btn-cancel" onclick="loadMaster()">取消</button>
   </div>`;
@@ -427,6 +433,7 @@ async function confirmEditProduct(btn, genreId) {
   const id = parseInt(row.dataset.id);
   const name = row.querySelector('.e-name').value.trim();
   const code = row.querySelector('.e-code').value.trim();
+  const unit = row.querySelector('.e-unit') ? row.querySelector('.e-unit').value.trim() : '';
   if (!name) return;
 
   // 現在開いているジャンルを記憶
@@ -435,7 +442,7 @@ async function confirmEditProduct(btn, genreId) {
 
   await fetch('../api/master_genre_product.php', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action: 'update_product', id, genre_id: parseInt(genreId), product_code: code, product_name: name}),
+    body: JSON.stringify({action: 'update_product', id, genre_id: parseInt(genreId), product_code: code, product_name: name, unit_quantity: unit}),
   });
   showMsg('更新しました');
   await loadMaster();

@@ -68,6 +68,7 @@ try {
             $genreId = (int)($input['genre_id'] ?? 0);
             $code = trim((string)($input['product_code'] ?? ''));
             $name = trim((string)($input['product_name'] ?? ''));
+            $unitQty = trim((string)($input['unit_quantity'] ?? ''));
             if ($genreId <= 0 || $name === '') {
                 out(['ok' => false, 'error' => 'ジャンルと商品名は必須です。']);
             }
@@ -78,10 +79,10 @@ try {
             $maxOrder = (int)$stmt->fetchColumn();
 
             $stmt = $pdo->prepare("
-                INSERT INTO products (genre_id, product_code, product_name, display_order)
-                VALUES (:genre_id, :code, :name, :order)
+                INSERT INTO products (genre_id, product_code, product_name, unit_quantity, display_order)
+                VALUES (:genre_id, :code, :name, :unit_qty, :order)
             ");
-            $stmt->execute(['genre_id' => $genreId, 'code' => $code ?? '', 'name' => $name, 'order' => $maxOrder + 1]);
+            $stmt->execute(['genre_id' => $genreId, 'code' => $code ?? '', 'name' => $name, 'unit_qty' => $unitQty, 'order' => $maxOrder + 1]);
             out(['ok' => true]);
             break;
 
@@ -90,14 +91,15 @@ try {
             $genreId = (int)($input['genre_id'] ?? 0);
             $code = trim((string)($input['product_code'] ?? ''));
             $name = trim((string)($input['product_name'] ?? ''));
+            $unitQty = trim((string)($input['unit_quantity'] ?? ''));
             if ($id <= 0 || $genreId <= 0 || $name === '') {
                 out(['ok' => false, 'error' => '入力内容が正しくありません。']);
             }
             $stmt = $pdo->prepare("
-                UPDATE products SET genre_id = :genre_id, product_code = :code, product_name = :name
+                UPDATE products SET genre_id = :genre_id, product_code = :code, product_name = :name, unit_quantity = :unit_qty
                 WHERE id = :id
             ");
-            $stmt->execute(['genre_id' => $genreId, 'code' => $code, 'name' => $name, 'id' => $id]);
+            $stmt->execute(['genre_id' => $genreId, 'code' => $code, 'name' => $name, 'unit_qty' => $unitQty, 'id' => $id]);
             out(['ok' => true]);
             break;
 
