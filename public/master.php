@@ -94,6 +94,11 @@
       <button class="expand-products-btn" id="bulk-cancel-btn" style="display:none;" onclick="cancelBulkEdit()">キャンセル</button>
     </div>
     <div id="product-group-container"></div>
+    <div id="product-bottom-btns" style="display:none;display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+      <button class="expand-products-btn" style="color:#1e7e34;border-color:#1e7e34;background:#e6f4ea;" onclick="saveAllEditing()">すべて保存</button>
+      <button class="expand-products-btn" onclick="cancelBulkEdit()">キャンセル</button>
+    </div>
+  </div>
   </div>
 
   <!-- 取引先 -->
@@ -176,6 +181,7 @@ function renderGenres() {
       <td><span class="drag-handle">&#9776;</span></td>
       <td class="td-name">${escapeHtml(g.name)}</td>
       <td><div class="row-actions">
+          <button class="btn-mini btn-edit" onclick="editGenre(this)">編集</button>
           <button class="btn-mini btn-delete" onclick="deleteGenre(${g.id})">削除</button>
         </div></td>
     </tr>`).join('');
@@ -213,8 +219,7 @@ function renderProducts() {
         <td class="td-code">${escapeHtml(p.product_code)}</td>
         <td class="td-unit">${escapeHtml(p.unit_quantity || '')}</td>
         <td><div class="row-actions">
-          <button class="btn-mini btn-edit" onclick="editProduct(this)">編集</button>
-          <button class="btn-mini btn-delete" onclick="deleteProduct(${p.id})">削除</button>
+          <button class="btn-mini btn-delete product-delete-btn" onclick="deleteProduct(${p.id})">削除</button>
         </div></td>
       </tr>`).join('');
 
@@ -234,6 +239,10 @@ function renderProducts() {
         </div>
       </div>`;
   }).join('');
+
+  // 最下部の保存・キャンセルボタン
+  const bottomBtns = document.getElementById('product-bottom-btns');
+  if (bottomBtns) bottomBtns.style.display = 'none';
 
   // ドラッグ&ドロップを各ジャンルのtbodyに設定
   activeGenres.forEach(g => {
@@ -443,12 +452,18 @@ function toggleBulkEdit() {
   document.getElementById('bulk-edit-btn').style.display = 'none';
   document.getElementById('bulk-save-btn').style.display = '';
   document.getElementById('bulk-cancel-btn').style.display = '';
+  const bottomBtns = document.getElementById('product-bottom-btns');
+  if (bottomBtns) bottomBtns.style.display = 'flex';
+}
 }
 
 async function cancelBulkEdit() {
   bulkEditMode = false;
-  const openGenres = Array.from(document.querySelectorAll('.product-genre-body.open'))
-    .map(b => b.closest('.product-genre-group').querySelector('.product-genre-title span').textContent);
+  document.getElementById('bulk-edit-btn').style.display = '';
+  document.getElementById('bulk-save-btn').style.display = 'none';
+  document.getElementById('bulk-cancel-btn').style.display = 'none';
+  const bottomBtns2 = document.getElementById('product-bottom-btns');
+  if (bottomBtns2) bottomBtns2.style.display = 'none';
   await loadMaster();
   document.querySelectorAll('.product-genre-group').forEach(group => {
     const title = group.querySelector('.product-genre-title span').textContent;
