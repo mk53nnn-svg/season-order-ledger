@@ -22,6 +22,7 @@ $clients = $clientsStmt->fetchAll();
 <title>受注入力 - シーズン受注台帳</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { overflow-y: scroll; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; background: #f5f5f5; color: #222; }
   .page { max-width: 680px; margin: 0 auto; padding: 24px 16px; }
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
