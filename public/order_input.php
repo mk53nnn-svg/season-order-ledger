@@ -27,7 +27,8 @@ $clients = $clientsStmt->fetchAll();
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .header h1 { font-size: 18px; font-weight: 600; }
   .header .season { font-size: 13px; color: #666; background: #fff; padding: 4px 10px; border-radius: 999px; }
-  .card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .card { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: visible; }
+  #item-list { min-height: 60px; }
   .section-label { font-size: 12px; font-weight: 600; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
@@ -59,7 +60,7 @@ $clients = $clientsStmt->fetchAll();
   .custom-select-trigger:hover { border-color: #4a90d9; }
   .custom-select-trigger.open { border-color: #4a90d9; background: #fff; }
   .custom-select-trigger .arrow { font-size: 10px; color: #888; }
-  .custom-select-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 1000; max-height: 240px; overflow-y: auto; display: none; }
+  .custom-select-dropdown { position: fixed; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 9999; max-height: 240px; overflow-y: auto; display: none; width: 200px; }
   .custom-select-dropdown.open { display: block; }
   .custom-select-option { padding: 8px 12px; font-size: 14px; color: #222; cursor: pointer; }
   .custom-select-option:hover { background: #f0f5ff; }
@@ -234,6 +235,11 @@ function createCustomSelect(options, placeholder, onChange) {
       d.previousElementSibling.classList.remove('open');
     });
     if (!isOpen) {
+      // トリガーの位置を取得してドロップダウンを配置
+      const rect = trigger.getBoundingClientRect();
+      dropdown.style.top = (rect.bottom + 4) + 'px';
+      dropdown.style.left = rect.left + 'px';
+      dropdown.style.width = rect.width + 'px';
       dropdown.classList.add('open');
       trigger.classList.add('open');
     }
