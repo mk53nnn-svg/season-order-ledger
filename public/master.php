@@ -414,7 +414,6 @@ async function addProduct() {
 }
 
 function editProduct(btn) {
-  // 他の編集中の行をキャンセルして元に戻す
   // 編集中の行を元に戻す（入力中の値を保持したまま表示に戻す）
   document.querySelectorAll('tr').forEach(r => {
     const nameInput = r.querySelector('.e-name');
