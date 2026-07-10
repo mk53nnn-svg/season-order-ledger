@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -154,7 +154,7 @@ function renderGroups(data) {
     const hasNeeded = rows.some(r => r.status === 'needed');
     const neededInGenre = rows.filter(r => r.status === 'needed').length;
     const badgeClass = hasNeeded ? 'genre-badge has-needed' : 'genre-badge';
-    const badgeText = hasNeeded ? `未発注 ${neededInGenre}件` : `${rows.length}商品`;
+    const badgeText = hasNeeded ? `未発注 ${neededInGenre}件` : '';
 
     const tableRows = rows.map(row => {
       const isUrgent = row.status === 'needed';
