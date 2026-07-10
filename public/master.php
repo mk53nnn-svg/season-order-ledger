@@ -428,12 +428,26 @@ async function confirmEditProduct(btn, genreId) {
   const name = row.querySelector('.e-name').value.trim();
   const code = row.querySelector('.e-code').value.trim();
   if (!name) return;
+
+  // 現在開いているジャンルを記憶
+  const openGenres = Array.from(document.querySelectorAll('.product-genre-body.open'))
+    .map(b => b.closest('.product-genre-group').querySelector('.product-genre-title span').textContent);
+
   await fetch('../api/master_genre_product.php', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({action: 'update_product', id, genre_id: parseInt(genreId), product_code: code, product_name: name}),
   });
   showMsg('更新しました');
   await loadMaster();
+
+  // 開いていたジャンルを再展開
+  document.querySelectorAll('.product-genre-group').forEach(group => {
+    const title = group.querySelector('.product-genre-title span').textContent;
+    if (openGenres.includes(title)) {
+      group.querySelector('.product-genre-body').classList.add('open');
+      group.querySelector('.product-genre-chevron').classList.add('open');
+    }
+  });
 }
 
 async function deleteProduct(id) {
