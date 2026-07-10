@@ -199,14 +199,12 @@ function render() {
           <input type="date" id="po-date-input" value="${new Date().toISOString().slice(0,10)}">
         </div>
         <div class="field">
-          <label>発注者</label>
-          <div style="display:flex;gap:6px;">
-            <select id="po-staff-select" style="flex:1;height:36px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:14px;"></select>
-            <input type="text" id="po-staff-input" placeholder="または自由入力" style="flex:1;height:36px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:14px;">
-          </div>
+          <label>発注者（プルダウンまたは自由入力）</label>
+          <select id="po-staff-select" style="width:100%;height:36px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:14px;margin-bottom:6px;"></select>
+          <input type="text" id="po-staff-input" placeholder="または自由入力" style="width:100%;height:36px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:14px;">
         </div>
-        <button class="btn-save" onclick="savePurchaseOrder()">保存する</button>
       </div>
+      <button class="btn-save" onclick="savePurchaseOrder()" style="margin-top:10px;width:100%;">保存する</button>
       <div class="saved-msg" id="po-saved-msg">保存しました。発注履歴に追加されました</div>
     </div>
 
