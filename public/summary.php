@@ -15,6 +15,7 @@ if (!$selectedSeasonId) {
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="common.css">
 <title>商品別受注集計 - シーズン受注台帳</title>
 <style>
@@ -64,7 +65,25 @@ if (!$selectedSeasonId) {
   .loading { padding: 40px; text-align: center; color: #999; }
   .copy-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: #222; color: #fff; font-size: 12px; padding: 8px 16px; border-radius: 8px; opacity: 0; transition: all 0.2s; pointer-events: none; z-index: 100; }
   .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .expand-all-btn { font-size: 12px; color: #888; border: 1px solid #ddd; background: #fff; border-radius: 8px; padding: 5px 12px; cursor: pointer; }
+  .expand-products-btn { font-size: 12px; color: #888; border: 1px solid #ddd; background: #fff; border-radius: 8px; padding: 5px 12px; cursor: pointer; }
+
+  @media (max-width: 600px) {
+    .page { padding: 12px 8px; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .topbar h1 { font-size: 16px; }
+    .filters { flex-wrap: wrap; gap: 6px; width: 100%; }
+    .filters select { font-size: 12px; height: 32px; flex: 1; }
+    .btn-excel { font-size: 12px; height: 32px; padding: 0 10px; }
+    .expand-all-btn { font-size: 12px; height: 32px; padding: 0 10px; }
+    .genre-header { padding: 10px 12px; }
+    .genre-name { font-size: 13px; }
+    th { font-size: 10px; padding: 6px 8px; }
+    td { padding: 8px 8px; font-size: 12px; }
+    .product-name { font-size: 12px; }
+    .code-chip { font-size: 10px; padding: 1px 6px; }
+    .action-btn { font-size: 11px; padding: 4px 8px; }
+    .stock-num { font-size: 13px; }
+  }
 </style>
 </head>
 <body>
