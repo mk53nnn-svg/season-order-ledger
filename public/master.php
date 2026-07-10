@@ -415,7 +415,7 @@ async function addProduct() {
 
 function editProduct(btn) {
   // 他の編集中の行をキャンセルして元に戻す
-  document.querySelectorAll('.btn-mini-cancel').forEach(b => {
+  document.querySelectorAll('.btn-cancel').forEach(b => {
     if (b.textContent === '取消') b.click();
   });
 
