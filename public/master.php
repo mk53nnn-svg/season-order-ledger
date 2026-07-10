@@ -33,6 +33,15 @@
   .drag-handle:active { cursor: grabbing; }
   tr.dragging { opacity: 0.4; }
   tr.drag-over { border-top: 2px solid #2b6cb0; }
+  .product-genre-group { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 10px; }
+  .product-genre-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; cursor: pointer; background: #fafafa; border-bottom: 1px solid #eee; user-select: none; }
+  .product-genre-header:hover { background: #f0f0f0; }
+  .product-genre-title { font-size: 14px; font-weight: 600; color: #222; display: flex; align-items: center; gap: 8px; }
+  .product-genre-body { display: none; }
+  .product-genre-body.open { display: block; }
+  .product-genre-chevron { font-size: 12px; color: #888; transition: transform 0.2s; }
+  .product-genre-chevron.open { transform: rotate(180deg); }
+  .expand-products-btn { font-size: 12px; color: #888; border: 1px solid #ddd; background: #fff; border-radius: 8px; padding: 5px 12px; cursor: pointer; margin-bottom: 10px; }
   .msg { margin-top: 12px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
   .msg.success { background: #e6f4ea; color: #1e7e34; display: block; }
   .msg.error { background: #fdecea; color: #c0392b; display: block; }
@@ -76,10 +85,10 @@
       <input type="text" id="new-product-code" placeholder="商品コード">
       <button onclick="addProduct()">追加する</button>
     </div>
-    <table>
-      <thead><tr><th>ジャンル</th><th>商品名</th><th>コード</th><th style="width:140px;"></th></tr></thead>
-      <tbody id="product-tbody"></tbody>
-    </table>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <button class="expand-products-btn" id="expand-products-btn" onclick="toggleAllProducts()">すべて展開</button>
+    </div>
+    <div id="product-group-container"></div>
   </div>
 
   <!-- 取引先 -->
@@ -168,19 +177,65 @@ function renderGenres() {
     </tr>`).join('');
 }
 
+let productAllExpanded = false;
+
+function toggleAllProducts() {
+  productAllExpanded = !productAllExpanded;
+  document.querySelectorAll('.product-genre-body').forEach(b => b.classList.toggle('open', productAllExpanded));
+  document.querySelectorAll('.product-genre-chevron').forEach(c => c.classList.toggle('open', productAllExpanded));
+  document.getElementById('expand-products-btn').textContent = productAllExpanded ? 'すべて折りたたむ' : 'すべて展開';
+}
+
+function toggleProductGenre(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.product-genre-chevron');
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+
 function renderProducts() {
-  const tbody = document.getElementById('product-tbody');
   const activeProducts = masterData.products.filter(p => p.is_active == 1);
-  tbody.innerHTML = activeProducts.map(p => `
-    <tr data-id="${p.id}" data-genre-id="${p.genre_id}">
-      <td class="td-genre">${escapeHtml(p.genre_name)}</td>
-      <td class="td-name">${escapeHtml(p.product_name)}</td>
-      <td class="td-code">${escapeHtml(p.product_code)}</td>
-      <td><div class="row-actions">
-        <button class="btn-mini btn-edit" onclick="editProduct(this)">編集</button>
-        <button class="btn-mini btn-delete" onclick="deleteProduct(${p.id})">削除</button>
-      </div></td>
-    </tr>`).join('');
+  const activeGenres = masterData.genres.filter(g => g.is_active == 1);
+  const container = document.getElementById('product-group-container');
+  if (!container) return;
+
+  // ジャンルごとにグループ化（ジャンルの表示順に従う）
+  container.innerHTML = activeGenres.map(g => {
+    const products = activeProducts.filter(p => p.genre_id == g.id);
+    const rows = products.map(p => `
+      <tr data-id="${p.id}" data-genre-id="${p.genre_id}" draggable="true">
+        <td><span class="drag-handle">&#9776;</span></td>
+        <td class="td-name">${escapeHtml(p.product_name)}</td>
+        <td class="td-code">${escapeHtml(p.product_code)}</td>
+        <td><div class="row-actions">
+          <button class="btn-mini btn-edit" onclick="editProduct(this)">編集</button>
+          <button class="btn-mini btn-delete" onclick="deleteProduct(${p.id})">削除</button>
+        </div></td>
+      </tr>`).join('');
+
+    return `
+      <div class="product-genre-group">
+        <div class="product-genre-header" onclick="toggleProductGenre(this)">
+          <div class="product-genre-title">
+            <span>${escapeHtml(g.name)}</span>
+            <span class="genre-badge">${products.length}商品</span>
+          </div>
+          <span class="product-genre-chevron">▼</span>
+        </div>
+        <div class="product-genre-body">
+          <table>
+            <thead><tr><th style="width:30px;"></th><th>商品名</th><th>コード</th><th style="width:140px;"></th></tr></thead>
+            <tbody id="product-tbody-${g.id}">${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }).join('');
+
+  // ドラッグ&ドロップを各ジャンルのtbodyに設定
+  activeGenres.forEach(g => {
+    const tbody = document.getElementById(`product-tbody-${g.id}`);
+    if (tbody) initDragAndDrop(`product-tbody-${g.id}`, 'reorder_products', '../api/master_genre_product.php');
+  });
 }
 
 function renderProductGenreSelect() {
