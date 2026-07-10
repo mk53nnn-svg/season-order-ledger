@@ -414,6 +414,18 @@ document.getElementById('order-form').addEventListener('submit', async (e) => {
     items: items,
   };
 
+  // 取引先がマスタに未登録かチェック
+  const clientRes = await fetch('../api/get_clients.php');
+  const clientData = await clientRes.json();
+  const registeredNames = clientData.ok ? clientData.clients.map(c => c.name) : [];
+  const isUnregistered = !registeredNames.includes(clientName);
+
+  if (isUnregistered) {
+    if (!confirm(`「${clientName}」は取引先マスタに未登録です。\nこのまま受注登録しますか？\n（取引先マスタへの登録は行われません）`)) {
+      return;
+    }
+  }
+
   try {
     const res = await fetch('../api/save_order.php', {
       method: 'POST',
