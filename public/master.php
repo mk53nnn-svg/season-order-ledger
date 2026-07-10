@@ -87,8 +87,9 @@
       <input type="text" id="new-product-unit" placeholder="入数（例：100入）">
       <button onclick="addProduct()">追加する</button>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
       <button class="expand-products-btn" id="expand-products-btn" onclick="toggleAllProducts()">すべて展開</button>
+      <button class="expand-products-btn" style="color:#1e7e34;border-color:#1e7e34;background:#e6f4ea;" onclick="saveAllEditing()">編集中をすべて保存</button>
     </div>
     <div id="product-group-container"></div>
   </div>
@@ -414,24 +415,6 @@ async function addProduct() {
 }
 
 function editProduct(btn) {
-  // 編集中の行を元に戻す（入力中の値を保持したまま表示に戻す）
-  document.querySelectorAll('tr').forEach(r => {
-    const nameInput = r.querySelector('.e-name');
-    if (!nameInput) return;
-    const codeInput = r.querySelector('.e-code');
-    const unitInput = r.querySelector('.e-unit');
-    const nameVal = nameInput.value;
-    const codeVal = codeInput ? codeInput.value : '';
-    const unitVal = unitInput ? unitInput.value : '';
-    r.querySelector('.td-name').innerHTML = escapeHtml(nameVal);
-    r.querySelector('.td-code').innerHTML = escapeHtml(codeVal);
-    if (r.querySelector('.td-unit')) r.querySelector('.td-unit').innerHTML = escapeHtml(unitVal);
-    if (r.cells[4]) r.cells[4].innerHTML = `<div class="row-actions">
-      <button class="btn-mini btn-edit" onclick="editProduct(this)">編集</button>
-      <button class="btn-mini btn-delete" onclick="deleteProduct(${r.dataset.id})">削除</button>
-    </div>`;
-  });
-
   const row = btn.closest('tr');
   const genreId = row.dataset.genreId;
   const name = row.querySelector('.td-name').textContent;
@@ -623,6 +606,39 @@ function initDragAndDrop(tbodyId, saveAction, apiUrl) {
       r.classList.remove('dragging');
       r.classList.remove('drag-over');
     });
+  });
+}
+
+async function saveAllEditing() {
+  const editingRows = document.querySelectorAll('tr .e-name');
+  if (editingRows.length === 0) { showMsg('編集中の行がありません', true); return; }
+
+  const openGenres = Array.from(document.querySelectorAll('.product-genre-body.open'))
+    .map(b => b.closest('.product-genre-group').querySelector('.product-genre-title span').textContent);
+
+  for (const nameInput of editingRows) {
+    const row = nameInput.closest('tr');
+    const id = parseInt(row.dataset.id);
+    const genreId = parseInt(row.dataset.genreId);
+    const name = nameInput.value.trim();
+    const code = row.querySelector('.e-code') ? row.querySelector('.e-code').value.trim() : '';
+    const unit = row.querySelector('.e-unit') ? row.querySelector('.e-unit').value.trim() : '';
+    if (!name) continue;
+    await fetch('../api/master_genre_product.php', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'update_product', id, genre_id: genreId, product_code: code, product_name: name, unit_quantity: unit}),
+    });
+  }
+
+  showMsg('すべて保存しました');
+  await loadMaster();
+
+  document.querySelectorAll('.product-genre-group').forEach(group => {
+    const title = group.querySelector('.product-genre-title span').textContent;
+    if (openGenres.includes(title)) {
+      group.querySelector('.product-genre-body').classList.add('open');
+      group.querySelector('.product-genre-chevron').classList.add('open');
+    }
   });
 }
 
