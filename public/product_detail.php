@@ -91,6 +91,8 @@ if ($productId <= 0 || $seasonId <= 0) {
     .breadcrumb { font-size: 13px; margin-bottom: 8px; }
     .stock-panel { padding: 12px; }
     .stock-row { flex-wrap: wrap; }
+    .order-panel { display: none; }
+    .stock-panel { display: none; }
   }
 </style>
 </head>
