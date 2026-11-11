@@ -194,7 +194,10 @@ function render() {
     </div>
 
     <div class="order-panel">
-      <div class="order-panel-title">発注入力</div>
+      <div class="order-panel-title" onclick="toggleOrderPanel()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;">
+        <span>発注入力</span><span id="order-panel-chevron" style="font-size:12px;color:#888;">▼</span>
+      </div>
+      <div id="order-panel-body" style="display:none;">
       <div class="order-row">
         <div class="field">
           <label>発注数</label>
@@ -212,6 +215,7 @@ function render() {
       </div>
       <button class="btn-save" onclick="savePurchaseOrder()" style="margin-top:10px;width:100%;">保存する</button>
       <div class="saved-msg" id="po-saved-msg">保存しました。発注履歴に追加されました</div>
+      </div>
     </div>
 
     <div class="section-title">受注内訳（${d.orders.length}件）</div>
@@ -247,6 +251,14 @@ function renderOrderRow(o) {
       </div></td>
     </tr>
   `;
+}
+
+function toggleOrderPanel() {
+  const body = document.getElementById('order-panel-body');
+  const chev = document.getElementById('order-panel-chevron');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  chev.textContent = open ? '▲' : '▼';
 }
 
 function togglePoHistory() {

@@ -49,6 +49,8 @@ if (!$selectedSeasonId) {
   .date-row label { font-size: 13px; color: #555; }
   .date-row input { height: 36px; border-radius: 8px; border: 1px solid #ccc; padding: 0 10px; font-size: 14px; }
   .loading { padding: 40px; text-align: center; color: #999; }
+  .back-btn { font-size: 13px; color: #555; border: 1px solid #ccc; background: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; }
+  .back-btn:hover { background: #f5f5f5; }
   .code-chip.copied { background: #e6f4ea; border-color: #b7d9bf; color: #1e7e34; }
   .copy-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: #222; color: #fff; font-size: 12px; padding: 8px 16px; border-radius: 8px; opacity: 0; transition: all 0.2s; pointer-events: none; z-index: 100; }
   .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -69,7 +71,7 @@ if (!$selectedSeasonId) {
 <div style="padding:8px 16px;background:#fff;border-bottom:1px solid #eee;"><a href="index.php" style="font-size:12px;color:#888;text-decoration:none;">&laquo; ホーム</a></div>
 <div class="page">
   <div class="header">
-    <h1>一括発注入力</h1>
+    <div><button type="button" class="back-btn" onclick="goBackPage()">← 前のページに戻る</button><h1 style="margin-top:8px;">一括発注入力</h1></div>
     <span class="season" id="season-name"><?= htmlspecialchars($activeSeason['name'] ?? '') ?></span>
   </div>
 
@@ -88,7 +90,7 @@ if (!$selectedSeasonId) {
   <div id="container"><div class="loading">読み込み中...</div></div>
 
   <div class="actions">
-    <button class="btn-secondary" onclick="window.history.back()">戻る</button>
+    <button class="btn-secondary" onclick="goBackPage()">← 前のページに戻る</button>
     <button class="btn-primary" onclick="submitBulkOrder()">一括発注を登録する</button>
   </div>
   <div class="msg" id="msg"></div>
@@ -259,6 +261,14 @@ async function executeOrder() {
   } catch (e) {
     msg.className = 'msg error';
     msg.textContent = '通信エラーが発生しました。';
+  }
+}
+
+function goBackPage() {
+  if (document.referrer) {
+    window.history.back();
+  } else {
+    window.location.href = 'summary.php';
   }
 }
 
