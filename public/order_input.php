@@ -11,7 +11,7 @@ if (!$season) {
 }
 
 $pdo = get_pdo();
-$clientsStmt = $pdo->query("SELECT id, name FROM clients ORDER BY display_order ASC, id ASC");
+$clientsStmt = $pdo->query("SELECT id, name FROM clients ORDER BY COALESCE(NULLIF(reading, ''), name) COLLATE utf8mb4_ja_0900_as_cs ASC, id ASC");
 $clients = $clientsStmt->fetchAll();
 ?>
 <!DOCTYPE html>

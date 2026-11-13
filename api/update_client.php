@@ -19,8 +19,8 @@ try {
         case 'add_client':
             $name = trim((string)($input['name'] ?? ''));
             if ($name === '') fail5('取引先名が空です。');
-            $stmt = $pdo->prepare("INSERT INTO clients (name) VALUES (:name) ON DUPLICATE KEY UPDATE name = name");
-            $stmt->execute(['name' => $name]);
+            $stmt = $pdo->prepare("INSERT INTO clients (name, reading) VALUES (:name, :reading) ON DUPLICATE KEY UPDATE reading = IF(VALUES(reading) = '', reading, VALUES(reading))");
+            $stmt->execute(['name' => $name, 'reading' => trim((string)($input['reading'] ?? ''))]);
             echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
             break;
 
@@ -29,8 +29,8 @@ try {
             $name = trim((string)($input['name'] ?? ''));
             if ($id <= 0 || $name === '') fail5('入力内容が正しくありません。');
             // clientsテーブルの名前を更新
-            $stmt = $pdo->prepare("UPDATE clients SET name = :name WHERE id = :id");
-            $stmt->execute(['name' => $name, 'id' => $id]);
+            $stmt = $pdo->prepare("UPDATE clients SET name = :name, reading = :reading WHERE id = :id");
+            $stmt->execute(['name' => $name, 'reading' => trim((string)($input['reading'] ?? '')), 'id' => $id]);
             // ordersテーブルのclient_nameも合わせて更新
             $oldName = trim((string)($input['old_name'] ?? ''));
             if ($oldName !== '') {

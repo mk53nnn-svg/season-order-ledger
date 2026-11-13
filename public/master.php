@@ -31,7 +31,7 @@
   select.inline-edit { height: 30px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; width: 100%; }
   .note { font-size: 12px; color: #999; margin-bottom: 12px; }
   .drag-handle { cursor: grab; color: #ccc; font-size: 16px; padding: 0 6px; user-select: none; }
-  .drag-handle:active { cursor: grabbing; }
+  .drag-handle:active { cursor: grabbing; }の次の行に #client-tbody .drag-handle { display: none; } を追加
   tr.dragging { opacity: 0.4; }
   tr.drag-over { border-top: 2px solid #2b6cb0; }
   .product-genre-group { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 10px; }
@@ -105,12 +105,12 @@
   <!-- 取引先 -->
   <div class="panel" id="panel-client">
     <div class="add-row">
-      <input type="text" id="new-client-name" placeholder="取引先名を入力">
+      同じ行の次の行に <input type="text" id="new-client-reading" placeholder="ふりがな（漢字の名前の場合）"> を追加
       <button onclick="addClient()">追加する</button>
     </div>
     <p class="note">取引先名をクリックすると今シーズンの受注一覧を表示します。</p>
     <table>
-      <thead><tr><th style="width:30px;"></th><th>取引先名</th><th style="width:160px;"></th></tr></thead>
+      <thead><tr><th style="width:30px;"></th><th>取引先名</th><th>ふりがな</th><th style="width:160px;"></th></tr></thead>
       <tbody id="client-tbody"></tbody>
     </table>
   </div>
@@ -276,11 +276,11 @@ async function addClient() {
   if (!name) { showMsg('取引先名を入力してください', true); return; }
   const res = await fetch('../api/update_client.php', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action: 'add_client', name}),
+    body: JSON.stringify({action: 'add_client', name, reading: document.getElementById('new-client-reading').value.trim()}),
   });
   const result = await res.json();
   if (result.ok) {
-    document.getElementById('new-client-name').value = '';
+    同じ行の次の行に document.getElementById('new-client-reading').value = ''; を追加
     showMsg('取引先を追加しました');
     await loadClients();
   } else { showMsg(result.error || '追加に失敗しました', true); }
@@ -295,9 +295,9 @@ async function loadClients() {
     return;
   }
   tbody.innerHTML = result.clients.map(c => `
-    <tr data-id="${c.id}" data-name="${escapeHtml(c.name)}" draggable="true">
+    <tr data-id="${c.id}" data-name="${escapeHtml(c.name)}" data-reading="${escapeHtml(c.reading || '')}">（||の\は入れず、||ではなく半角の||＝縦線2本で入力してください）
       <td><span class="drag-handle">&#9776;</span></td>
-      <td><span class="client-name-link" onclick="showClientOrders('${escapeHtml(c.name)}')">${escapeHtml(c.name)}</span></td>
+      <td><span class="client-name-link" onclick="showClientOrders('${escapeHtml(c.name)}')">同じ行の次の行に <td style="color:#888;font-size:12px;">${escapeHtml(c.reading || '')}</td> を追加（縦線2本）
       <td><div class="row-actions">
         <button class="btn-mini btn-edit" onclick="editClient(this)">編集</button>
         <button class="btn-mini btn-delete" onclick="deleteClient(${c.id}, '${escapeHtml(c.name)}')">削除</button>
@@ -343,7 +343,8 @@ function editClient(btn) {
   const name = row.dataset.name;
   const id = row.dataset.id;
   row.querySelector('.client-name-link').outerHTML = `<input type="text" class="inline-edit e-client-name" value="${escapeHtml(name)}">`;
-  row.cells[1].innerHTML = `<div class="row-actions">
+    row.cells[2].innerHTML = `<input type="text" class="inline-edit e-client-reading" value="${escapeHtml(row.dataset.reading || '')}">`;
+  row.cells[3].innerHTML = `<div class="row-actions">
     <button class="btn-mini btn-confirm" onclick="confirmEditClient(this, ${id}, '${escapeHtml(name)}')">保存</button>
     <button class="btn-mini btn-cancel" onclick="loadClients()">取消</button>
   </div>`;
@@ -351,11 +352,11 @@ function editClient(btn) {
 
 async function confirmEditClient(btn, id, oldName) {
   const row = btn.closest('tr');
-  const newName = row.querySelector('.e-client-name').value.trim();
+  同じ行の次の行に const newReading = row.querySelector('.e-client-reading').value.trim(); を追加
   if (!newName) return;
   const res = await fetch('../api/update_client.php', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action: 'update_client', id, name: newName, old_name: oldName}),
+    body: JSON.stringify({action: 'update_client', id, name: newName, reading: newReading, old_name: oldName}),
   });
   const result = await res.json();
   if (result.ok) { showMsg('更新しました'); await loadClients(); }
