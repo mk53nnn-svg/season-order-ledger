@@ -106,6 +106,7 @@
   <!-- 取引先 -->
   <div class="panel" id="panel-client">
     <div class="add-row">
+      <input type="text" id="new-client-name" placeholder="取引先名">
       <input type="text" id="new-client-reading" placeholder="ふりがな（漢字の名前の場合）">
       <button onclick="addClient()">追加する</button>
     </div>
@@ -281,6 +282,7 @@ async function addClient() {
   });
   const result = await res.json();
   if (result.ok) {
+    document.getElementById('new-client-name').value = '';
     document.getElementById('new-client-reading').value = '';
     showMsg('取引先を追加しました');
     await loadClients();
@@ -354,6 +356,7 @@ function editClient(btn) {
 
 async function confirmEditClient(btn, id, oldName) {
   const row = btn.closest('tr');
+  const newName = row.querySelector('.e-client-name').value.trim();
   const newReading = row.querySelector('.e-client-reading').value.trim();
   if (!newName) return;
   const res = await fetch('../api/update_client.php', {
