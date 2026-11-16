@@ -2,6 +2,7 @@
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/backorder.php';
 
 $seasonId = isset($_GET['season_id']) ? (int)$_GET['season_id'] : 0;
 if ($seasonId <= 0) {
@@ -24,7 +25,8 @@ $sql = "
     COALESCE(o.order_count, 0)    AS order_count,
     COALESCE(o.order_qty_sum, 0)  AS order_qty_sum,
     COALESCE(po.po_qty_sum, 0)    AS po_qty_sum,
-    COALESCE(po.po_count, 0)      AS po_count
+    COALESCE(po.po_count, 0)      AS po_count,
+    b.expected_date               AS expected_date
   FROM products p
   INNER JOIN genres g ON g.id = p.genre_id
   LEFT JOIN (
@@ -39,18 +41,32 @@ $sql = "
     WHERE season_id = :season_id2
     GROUP BY product_id
   ) po ON po.product_id = p.id
+  LEFT JOIN product_backorders b
+    ON b.product_id = p.id AND b.season_id = :season_id3
   WHERE p.is_active = 1
   ORDER BY g.display_order ASC, g.id ASC, p.display_order ASC, p.id ASC
 ";
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute(['season_id1' => $seasonId, 'season_id2' => $seasonId]);
+$stmt->execute(['season_id1' => $seasonId, 'season_id2' => $seasonId, 'season_id3' => $seasonId]);
 $rows = $stmt->fetchAll();
 
 $result = array_map(function ($row) {
     $orderQty = (int)$row['order_qty_sum'];
     $poQty = (int)$row['po_qty_sum'];
     $stock = $poQty - $orderQty;
+
+    // 状態の判定：在庫マイナス → 未発注 / 品切れ中の期間内 → 品切れ中 / それ以外 → 発注済
+    $expected = $row['expected_date'];
+    $backorderActive = is_backorder_active($expected);
+    if ($stock < 0) {
+        $status = 'needed';
+    } elseif ($backorderActive) {
+        $status = 'backorder';
+    } else {
+        $status = 'ordered';
+    }
+
     return [
         'product_id' => (int)$row['product_id'],
         'product_code' => $row['product_code'],
@@ -62,7 +78,8 @@ $result = array_map(function ($row) {
         'po_count' => (int)$row['po_count'],
         'po_qty_sum' => $poQty,
         'stock' => $stock,
-        'status' => $stock >= 0 ? 'ordered' : 'needed',
+        'status' => $status,
+        'expected_date' => $backorderActive ? $expected : null,
     ];
 }, $rows);
 
