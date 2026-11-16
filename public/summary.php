@@ -56,6 +56,8 @@ if (!$selectedSeasonId) {
   .action-btn { font-size: 12px; padding: 5px 12px; border-radius: 999px; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; pointer-events: none; }
   .btn-done { background: #e6f4ea; color: #1e7e34; }
   .btn-needed { background: #c0392b; color: #fff; }
+  .btn-backorder { background: #fff4cc; color: #8a6d00; }
+  .backorder-date { font-size: 11px; color: #8a6d00; margin-top: 3px; white-space: nowrap; }
   .product-cell { display: flex; flex-direction: column; gap: 3px; cursor: pointer; }
   .product-name-row { display: flex; align-items: center; gap: 10px; }
   .product-name { font-weight: 600; color: #2b6cb0; }
@@ -193,9 +195,14 @@ function renderGroups(data) {
     const tableRows = rows.map(row => {
       const isUrgent = row.status === 'needed';
       const stockClass = row.stock < 0 ? 'stock-minus' : 'stock-plus';
-      const statusBtn = isUrgent
-        ? `<button class="action-btn btn-needed">未発注</button>`
-        : `<button class="action-btn btn-done">発注済</button>`;
+      let statusBtn;
+      if (isUrgent) {
+        statusBtn = `<button class="action-btn btn-needed">未発注</button>`;
+      } else if (row.status === 'backorder') {
+        statusBtn = `<button class="action-btn btn-backorder">品切れ中</button>` + (row.expected_date ? `<div class="backorder-date">${formatMD(row.expected_date)}出荷予定</div>` : '');
+      } else {
+        statusBtn = `<button class="action-btn btn-done">発注済</button>`;
+      }
 
       return `
         <tr class="${isUrgent ? 'urgent' : ''}">
@@ -258,6 +265,11 @@ function toggleAllGenres() {
   document.getElementById('expand-all-btn').textContent = allExpanded ? 'すべて折りたたむ' : 'すべて展開';
   const spBtn = document.getElementById('sp-expand-btn');
   if (spBtn) spBtn.textContent = allExpanded ? 'すべて折りたたむ' : 'すべて展開';
+}
+
+function formatMD(dateStr) {
+  const p = dateStr.split('-');
+  return parseInt(p[1], 10) + '/' + parseInt(p[2], 10);
 }
 
 function escapeHtml(str) {
