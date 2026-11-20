@@ -279,14 +279,22 @@ function renderBackorderPanel(d) {
   const boxStyle = active ? 'border:1px solid #f0d97a;background:#fffbea;' : 'background:#fff;';
   return `
     <div class="backorder-panel" style="${boxStyle}border-radius:10px;padding:14px 16px;margin-bottom:18px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-      <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px;">品切れ状況</div>
-      <div style="font-size:13px;margin-bottom:10px;">${info}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <div onclick="toggleBackorderPanel()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;font-size:13px;font-weight:600;color:#555;margin-bottom:8px;"><span>品切れ状況</span><span id="backorder-chevron" style="font-size:12px;color:#888;">▼</span></div>
+      <div style="font-size:${active ? '15px' : '13px'};margin-bottom:10px;">${info}</div>
+      <div id="backorder-body" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;">
         <input type="date" id="backorder-date-input" value="${dateVal}" style="height:34px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:13px;">
         <button class="edit-btn" onclick="saveBackorder()">${active ? '出荷予定日を変更' : '品切れ中にする'}</button>
         ${clearBtn}
       </div>
     </div>`;
+}
+
+function toggleBackorderPanel() {
+  const body = document.getElementById('backorder-body');
+  const chev = document.getElementById('backorder-chevron');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'flex' : 'none';
+  chev.textContent = open ? '▲' : '▼';
 }
 
 async function saveBackorder() {

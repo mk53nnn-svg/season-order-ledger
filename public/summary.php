@@ -57,6 +57,8 @@ if (!$selectedSeasonId) {
   .btn-done { background: #e6f4ea; color: #1e7e34; }
   .btn-needed { background: #c0392b; color: #fff; }
   .btn-backorder { background: #fff4cc; color: #8a6d00; }
+  .backorder-banner { background: #fff4cc; color: #8a6d00; border: 1px solid #f0d97a; }
+  .genre-badge.has-backorder { background: #fff4cc; color: #8a6d00; font-weight: 600; }
   .backorder-date { font-size: 11px; color: #8a6d00; margin-top: 3px; white-space: nowrap; }
   .product-cell { display: flex; flex-direction: column; gap: 3px; cursor: pointer; }
   .product-name-row { display: flex; align-items: center; gap: 10px; }
@@ -123,6 +125,9 @@ if (!$selectedSeasonId) {
     </div>
   </div>
 
+  <div class="alert-banner backorder-banner" id="backorder-banner">
+    <span id="backorder-text"></span>
+  </div>
   <div class="alert-banner" id="alert-banner">
     <span id="alert-text"></span>
   </div>
@@ -166,6 +171,15 @@ function renderGroups(data) {
   const filter = filterSelect.value;
   const filtered = filter === 'needed' ? data.filter(d => d.status === 'needed') : data;
 
+  const backorderCount = data.filter(d => d.expected_date).length;
+  const backorderBanner = document.getElementById('backorder-banner');
+  if (backorderCount > 0) {
+    backorderBanner.classList.add('show');
+    document.getElementById('backorder-text').textContent = `${backorderCount}件 品切れ中の商品があります。`;
+  } else {
+    backorderBanner.classList.remove('show');
+  }
+
   const neededCount = data.filter(d => d.status === 'needed').length;
   if (neededCount > 0) {
     alertBanner.classList.add('show');
@@ -191,6 +205,8 @@ function renderGroups(data) {
     const neededInGenre = rows.filter(r => r.status === 'needed').length;
     const badgeClass = hasNeeded ? 'genre-badge has-needed' : 'genre-badge';
     const badgeText = hasNeeded ? `未発注 ${neededInGenre}件` : '';
+    const backorderInGenre = rows.filter(r => r.expected_date).length;
+    const backorderBadge = backorderInGenre > 0 ? `<span class="genre-badge has-backorder">品切れ ${backorderInGenre}件</span>` : '';
 
     const tableRows = rows.map(row => {
       const isUrgent = row.status === 'needed';
@@ -229,7 +245,8 @@ function renderGroups(data) {
         <div class="genre-header" onclick="toggleGenre(this)">
           <div class="genre-header-left">
             <span class="genre-name">${escapeHtml(genreName)}</span>
-            <span class="${badgeClass}">${badgeText}</span>
+            ${badgeText ? `<span class="${badgeClass}">${badgeText}</span>` : ''}
+            ${backorderBadge}
           </div>
           <span class="genre-chevron">▼</span>
         </div>
