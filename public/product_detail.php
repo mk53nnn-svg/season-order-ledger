@@ -92,6 +92,7 @@ if ($productId <= 0 || $seasonId <= 0) {
     .stock-panel { padding: 12px; }
     .stock-row { flex-wrap: wrap; }
     .order-panel { display: none; }
+    .backorder-panel { display: none; }
     .stock-panel { display: none; }
     .home-link { display: none; }
     .edit-btn { display: none; }
@@ -186,6 +187,7 @@ function render() {
       <div class="card ${stockClass}"><div class="label">在庫（開始時+発注-受注）</div><div class="value">${d.stock}</div></div>
     </div>
 
+    ${renderBackorderPanel(d)}
     <div class="po-history" id="po-history">
       <table>
         <thead><tr><th>発注日</th><th class="num">発注数</th><th>発注者</th><th colspan="2"></th></tr></thead>
@@ -212,6 +214,11 @@ function render() {
           <select id="po-staff-select" style="width:100%;height:36px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:14px;margin-bottom:6px;"></select>
           <input type="text" id="po-staff-input" placeholder="または自由入力" style="width:100%;height:36px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:14px;">
         </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <label style="font-size:13px;color:#555;"><input type="checkbox" id="po-backorder-check" style="margin-right:4px;">品切れ中（出荷予定あり）</label>
+        <input type="date" id="po-backorder-date" style="height:34px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:13px;">
+        <span style="font-size:11px;color:#888;">出荷予定日</span>
       </div>
       <button class="btn-save" onclick="savePurchaseOrder()" style="margin-top:10px;width:100%;">保存する</button>
       <div class="saved-msg" id="po-saved-msg">保存しました。発注履歴に追加されました</div>
@@ -261,6 +268,46 @@ function toggleOrderPanel() {
   chev.textContent = open ? '▲' : '▼';
 }
 
+function renderBackorderPanel(d) {
+  const b = d.backorder || {};
+  const active = !!b.active;
+  const dateVal = active ? b.expected_date : '';
+  const info = active
+    ? `<span style="color:#8a6d00;font-weight:600;">品切れ中</span>　${b.expected_date} 出荷予定（${b.release_date} に自動で発注済になります）`
+    : '<span style="color:#888;">品切れ中ではありません</span>';
+  const clearBtn = active ? '<button class="delete-btn" onclick="clearBackorder()">品切れを解除（発注済にする）</button>' : '';
+  const boxStyle = active ? 'border:1px solid #f0d97a;background:#fffbea;' : 'background:#fff;';
+  return `
+    <div class="backorder-panel" style="${boxStyle}border-radius:10px;padding:14px 16px;margin-bottom:18px;box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+      <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px;">品切れ状況</div>
+      <div style="font-size:13px;margin-bottom:10px;">${info}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input type="date" id="backorder-date-input" value="${dateVal}" style="height:34px;border-radius:6px;border:1px solid #ccc;padding:0 8px;font-size:13px;">
+        <button class="edit-btn" onclick="saveBackorder()">${active ? '出荷予定日を変更' : '品切れ中にする'}</button>
+        ${clearBtn}
+      </div>
+    </div>`;
+}
+
+async function saveBackorder() {
+  const date = document.getElementById('backorder-date-input').value;
+  if (!date) { alert('出荷予定日を入力してください'); return; }
+  await fetch('../api/backorder.php', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'set', season_id: SEASON_ID, product_id: PRODUCT_ID, expected_date: date }),
+  });
+  await loadDetail();
+}
+
+async function clearBackorder() {
+  if (!confirm('品切れ中を解除して、発注済に戻しますか？')) return;
+  await fetch('../api/backorder.php', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'clear', season_id: SEASON_ID, product_id: PRODUCT_ID }),
+  });
+  await loadDetail();
+}
+
 function togglePoHistory() {
   document.getElementById('po-history').classList.toggle('show');
 }
@@ -274,6 +321,9 @@ async function savePurchaseOrder() {
   const staffInput = document.getElementById('po-staff-input');
   const staffName = (staffInput && staffInput.value.trim()) ? staffInput.value.trim() : (staffSelect ? staffSelect.value : '');
   if (qty <= 0 || !date) return;
+  const boChk = document.getElementById('po-backorder-check');
+  const boDt = document.getElementById('po-backorder-date');
+  if (boChk && boChk.checked && !(boDt && boDt.value)) { alert('品切れ中にする場合は出荷予定日を入力してください'); return; }
 
   // 自由入力した場合はマスタに追加
   if (staffInput && staffInput.value.trim() && !staffSelect.value) {
@@ -291,6 +341,14 @@ async function savePurchaseOrder() {
     body: JSON.stringify({ season_id: SEASON_ID, product_id: PRODUCT_ID, order_date: date, quantity: qty, staff_name: staffName }),
   });
   document.getElementById('po-saved-msg').classList.add('show');
+  const boCheck = document.getElementById('po-backorder-check');
+  const boDate = document.getElementById('po-backorder-date');
+  if (boCheck && boCheck.checked && boDate && boDate.value) {
+    await fetch('../api/backorder.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'set', season_id: SEASON_ID, product_id: PRODUCT_ID, expected_date: boDate.value }),
+    });
+  }
   document.getElementById('po-qty-input').value = '';
   await loadDetail();
 }

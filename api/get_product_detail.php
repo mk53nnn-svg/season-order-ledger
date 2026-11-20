@@ -2,6 +2,7 @@
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/backorder.php';
 
 $productId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : 0;
 $seasonId = isset($_GET['season_id']) ? (int)$_GET['season_id'] : 0;
@@ -76,6 +77,11 @@ $poFormatted = array_map(function ($po) use (&$poTotal) {
 // 在庫 = 発注合計 - 受注合計（initial_stocksは使わない）
 $stock = $poTotal - $orderTotal;
 
+$stmt = $pdo->prepare("SELECT expected_date FROM product_backorders WHERE product_id = :product_id AND season_id = :season_id");
+$stmt->execute(['product_id' => $productId, 'season_id' => $seasonId]);
+$boRow = $stmt->fetch();
+$boDate = $boRow ? $boRow['expected_date'] : null;
+
 echo json_encode([
     'ok' => true,
     'product' => $product,
@@ -84,4 +90,5 @@ echo json_encode([
     'purchase_orders' => $poFormatted,
     'po_total' => $poTotal,
     'stock' => $stock,
+    'backorder' => ['expected_date' => $boDate, 'active' => is_backorder_active($boDate), 'release_date' => $boDate ? backorder_release_date($boDate) : null],
 ], JSON_UNESCAPED_UNICODE);
