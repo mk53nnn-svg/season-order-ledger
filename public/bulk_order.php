@@ -104,7 +104,7 @@ if (!$selectedSeasonId) {
     <h2>発注内容の確認</h2>
     <p class="sub" id="confirm-date"></p>
     <table>
-      <thead><tr><th>商品名</th><th style="text-align:right;">発注数</th></tr></thead>
+      <thead><tr><th>商品名</th><th style="text-align:right;">発注数</th><th>品切れ</th></tr></thead>
       <tbody id="confirm-tbody"></tbody>
     </table>
     <div class="modal-actions">
@@ -158,6 +158,9 @@ function renderTable(data) {
             <input type="number" class="order-input" min="0" placeholder="―"
               data-product-id="${row.product_id}">
           </td>
+          <td class="num">
+            <input type="date" class="backorder-input" style="height:32px;border-radius:6px;border:1px solid #ccc;padding:0 6px;font-size:12px;">
+          </td>
         </tr>`;
     }).join('');
 
@@ -172,6 +175,7 @@ function renderTable(data) {
               <th class="num" style="width:90px;">発注数</th>
               <th class="num" style="width:80px;">在庫</th>
               <th class="num" style="width:100px;">発注入力</th>
+              <th style="width:150px;">品切れ時の出荷予定日</th>
             </tr>
           </thead>
           <tbody>${tableRows}</tbody>
@@ -209,6 +213,7 @@ function submitBulkOrder() {
         product_name: productName,
         quantity: qty,
         order_date: orderDate,
+        expected_date: (input.closest('tr').querySelector('.backorder-input') || {}).value || '',
       });
     }
   });
@@ -229,6 +234,7 @@ function submitBulkOrder() {
     <tr>
       <td>${escapeHtml(item.product_name)}</td>
       <td style="text-align:right;">${item.quantity}</td>
+      <td>${item.expected_date ? '品切れ中（' + item.expected_date + ' 出荷予定）' : ''}</td>
     </tr>`).join('');
   document.getElementById('confirm-modal').classList.add('show');
 }

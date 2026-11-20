@@ -22,6 +22,11 @@ try {
         INSERT INTO purchase_orders (season_id, product_id, order_date, quantity, staff_name)
         VALUES (:season_id, :product_id, :order_date, :quantity, :staff_name)
     ");
+    $boStmt = $pdo->prepare("
+        INSERT INTO product_backorders (season_id, product_id, expected_date)
+        VALUES (:season_id, :product_id, :d1)
+        ON DUPLICATE KEY UPDATE expected_date = :d2
+    ");
     foreach ($items as $item) {
         $productId = (int)($item['product_id'] ?? 0);
         $quantity = (int)($item['quantity'] ?? 0);
@@ -34,6 +39,15 @@ try {
             'quantity' => $quantity,
             'staff_name' => $staffName,
         ]);
+        $expected = (string)($item['expected_date'] ?? '');
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $expected)) {
+            $boStmt->execute([
+                'season_id' => $seasonId,
+                'product_id' => $productId,
+                'd1' => $expected,
+                'd2' => $expected,
+            ]);
+        }
     }
     $pdo->commit();
     echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
