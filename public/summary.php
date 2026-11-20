@@ -213,7 +213,7 @@ function renderGroups(data) {
       const stockClass = row.stock < 0 ? 'stock-minus' : 'stock-plus';
       let statusBtn;
       if (isUrgent) {
-        statusBtn = `<button class="action-btn btn-needed">未発注</button>`;
+        statusBtn = `<button class="action-btn btn-needed">未発注</button>` + (row.expected_date ? `<div class="backorder-date">${formatMD(row.expected_date)}出荷予定</div>` : '');
       } else if (row.status === 'backorder') {
         statusBtn = `<button class="action-btn btn-backorder">品切れ中</button>` + (row.expected_date ? `<div class="backorder-date">${formatMD(row.expected_date)}出荷予定</div>` : '');
       } else {
