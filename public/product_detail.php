@@ -203,7 +203,7 @@ function render() {
       <div class="order-row">
         <div class="field">
           <label>発注数</label>
-          <input type="number" id="po-qty-input" min="1" placeholder="例：15">
+          <input type="number" id="po-qty-input" placeholder="例：15（返品・修正は -5）">
         </div>
         <div class="field">
           <label>発注日</label>
@@ -328,7 +328,7 @@ async function savePurchaseOrder() {
   const staffSelect = document.getElementById('po-staff-select');
   const staffInput = document.getElementById('po-staff-input');
   const staffName = (staffInput && staffInput.value.trim()) ? staffInput.value.trim() : (staffSelect ? staffSelect.value : '');
-  if (qty <= 0 || !date) return;
+  if (qty === 0 || !date) return;
   const boChk = document.getElementById('po-backorder-check');
   const boDt = document.getElementById('po-backorder-date');
   if (boChk && boChk.checked && !(boDt && boDt.value)) { alert('品切れ中にする場合は出荷予定日を入力してください'); return; }
@@ -386,7 +386,7 @@ async function confirmEditPo(btn, poId) {
   const date = row.querySelector('.e-po-date') ? row.querySelector('.e-po-date').value : '棚卸';
   const qty = parseInt(row.querySelector('.e-po-qty').value) || 0;
   const staff = row.querySelector('.e-po-staff') ? row.querySelector('.e-po-staff').value.trim() : '';
-  if (qty <= 0) return;
+  if (qty === 0) return;
   await fetch('../api/update_purchase_order.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -155,7 +155,7 @@ function renderTable(data) {
           <td class="num">${row.po_qty_sum}</td>
           <td class="num ${stockClass}">${row.stock}</td>
           <td class="num">
-            <input type="number" class="order-input" min="0" placeholder="―"
+            <input type="number" class="order-input" placeholder="―"
               data-product-id="${row.product_id}">
           </td>
           <td class="num">
@@ -205,7 +205,7 @@ function submitBulkOrder() {
   pendingItems = [];
   document.querySelectorAll('.order-input').forEach(input => {
     const qty = parseInt(input.value);
-    if (qty > 0) {
+    if (!isNaN(qty) && qty !== 0) {
       const row = input.closest('tr');
       const productName = row.querySelector('.product-name').textContent;
       pendingItems.push({

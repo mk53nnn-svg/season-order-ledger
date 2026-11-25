@@ -17,7 +17,7 @@ $orderDate = (string)($input['order_date'] ?? '');
 $quantity = (int)($input['quantity'] ?? 0);
 $staffName = trim((string)($input['staff_name'] ?? ''));
 
-if ($seasonId <= 0 || $productId <= 0 || $orderDate === '' || $quantity <= 0) {
+if ($seasonId <= 0 || $productId <= 0 || $orderDate === '' || $quantity === 0) {
     fail4('入力内容が正しくありません。');
 }
 

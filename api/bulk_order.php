@@ -31,7 +31,7 @@ try {
         $productId = (int)($item['product_id'] ?? 0);
         $quantity = (int)($item['quantity'] ?? 0);
         $orderDate = (string)($item['order_date'] ?? '');
-        if ($productId <= 0 || $quantity <= 0 || $orderDate === '') continue;
+        if ($productId <= 0 || $quantity === 0 || $orderDate === '') continue;
         $stmt->execute([
             'season_id' => $seasonId,
             'product_id' => $productId,

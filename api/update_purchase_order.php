@@ -21,7 +21,7 @@ try {
             $orderDate = (string)($input['order_date'] ?? '');
             $quantity = (int)($input['quantity'] ?? 0);
             $staffName = trim((string)($input['staff_name'] ?? ''));
-            if ($id <= 0 || $quantity <= 0) {
+            if ($id <= 0 || $quantity === 0) {
                 fail6('入力内容が正しくありません。');
             }
             $stmt = $pdo->prepare("UPDATE purchase_orders SET order_date = :order_date, quantity = :quantity, staff_name = :staff_name WHERE id = :id");
